@@ -1,4 +1,4 @@
-acvs
+_______
 
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -424,8 +424,9 @@ acvs
 
     .publicGrid{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-      gap:16px;
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      gap:18px;
+      align-items:start;
     }
 
     .publicMatchCard{
@@ -436,6 +437,10 @@ acvs
       margin-bottom:12px;
       position:relative;
       overflow:hidden;
+      min-height:148px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
     }
 
     .publicMatchCard::before{
@@ -504,6 +509,29 @@ acvs
       color:#444;
     }
 
+    .bracketPlaceholder{
+      background:#f9fafb;
+      border:2px dashed #111;
+      border-radius:18px;
+      padding:18px;
+      line-height:1.5;
+    }
+
+    .publicScore{
+      min-width:52px;
+      height:52px;
+      border-radius:999px;
+      background:#050505;
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:bold;
+      line-height:1.05;
+      text-align:center;
+      flex:none;
+    }
+
     @media(max-width:600px){
       .container{ padding:14px; }
       h1{ font-size:28px; }
@@ -567,6 +595,8 @@ acvs
           <h3>Operação</h3>
           <button onclick="importTestMatches()">Importar Jogos de Teste</button>
           <button onclick="syncApiMatches()" class="adminBtn">Sincronizar API da Copa</button>
+          <button onclick="deleteTestMatches()" class="dangerBtn">Limpar jogos de teste</button>
+          <button onclick="deleteAllMatches()" class="dangerBtn">Excluir todos os jogos</button>
           <button onclick="recalculateRanking()" class="secondaryBtn">Recalcular Ranking</button>
           <button onclick="exportBackupCsv()" class="secondaryBtn">Exportar Backup CSV</button>
           <button onclick="restoreLastSyncSnapshot()" class="dangerBtn">Restaurar última sync</button>
@@ -615,6 +645,7 @@ acvs
       <button class="tabBtn" onclick="showScreen('championScreen', this)">🏆 Campeão</button>
       <button class="tabBtn" onclick="showScreen('rankingScreen', this)">🏅 Ranking</button>
       <button class="tabBtn" onclick="showScreen('groupsScreen', this)">📊 Grupos</button>
+      <button class="tabBtn" onclick="showScreen('bracketScreen', this)">🧩 Chaveamento</button>
       <button class="tabBtn" onclick="showScreen('rulesScreen', this)">📜 Regras</button>
       <button class="tabBtn" onclick="showScreen('publicScreen', this)">📺 Público</button>
     </div>
@@ -655,6 +686,16 @@ acvs
     <div id="groupsScreen" class="screen card">
       <h2>📊 Classificação dos Grupos</h2>
       <div id="groupsList">Carregando classificação...</div>
+    </div>
+
+    <div id="bracketScreen" class="screen card">
+      <h2>🧩 Chaveamento</h2>
+      <div class="bracketPlaceholder">
+        <strong>Estrutura das fases finais</strong><br>
+        Esta área será usada para visualizar o caminho das seleções nas fases eliminatórias.
+        Na próxima etapa, vamos definir o layout do chaveamento: 16 avos, oitavas, quartas,
+        semifinais, disputa de 3º lugar e final.
+      </div>
     </div>
 
     <div id="rulesScreen" class="screen card rulesBox">
@@ -724,13 +765,13 @@ acvs
         </div>
 
         <div>
-          <h3>🗓️ Próximos 5 jogos</h3>
-          <div id="publicNextMatches">Carregando...</div>
+          <h3>✅ Últimos 5 encerrados</h3>
+          <div id="publicLastResults">Carregando...</div>
         </div>
 
         <div>
-          <h3>✅ Últimos 5 encerrados</h3>
-          <div id="publicLastResults">Carregando...</div>
+          <h3>🗓️ Próximos 5 jogos</h3>
+          <div id="publicNextMatches">Carregando...</div>
         </div>
       </div>
     </div>
@@ -750,7 +791,7 @@ acvs
    O restante do bolão usa o modelo interno padronizado.
 ============================================================ */
 
-const APP_VERSION = "v2.1.0-ajustes-ui-admin-api";
+const APP_VERSION = "v2.2.0-limpeza-publica-chaveamento";
 const SCHEMA_VERSION = "1.0";
 
 const API_CONFIG = {
@@ -812,7 +853,52 @@ const TEAM_DICTIONARY = {
   "Senegal":{ flagCode:"sn", colors:["#ffffff","#00853f"], aliases:["Senegal"] },
   "Suécia":{ flagCode:"se", colors:["#fecc00","#006aa7"], aliases:["Sweden"] },
   "Suíça":{ flagCode:"ch", colors:["#ff0000","#ffffff"], aliases:["Switzerland","Swiss"] },
-  "Uruguai":{ flagCode:"uy", colors:["#75aadb"], aliases:["Uruguay"] }
+  "Uruguai":{ flagCode:"uy", colors:["#75aadb"], aliases:["Uruguay"] },
+
+  "África do Sul":{ flagCode:"za", colors:["#007a4d","#ffb612"], aliases:["South Africa","RSA","Republic of South Africa"] },
+  "Tchéquia":{ flagCode:"cz", colors:["#ffffff","#d7141a"], aliases:["Czech Republic","Czechia","Czech","CZE"] },
+  "Bósnia e Herzegovina":{ flagCode:"ba", colors:["#002395","#fecb00"], aliases:["Bosnia & Herzegovina","Bosnia and Herzegovina","Bosnia-Herzegovina","Bosnia"] },
+  "Nova Zelândia":{ flagCode:"nz", colors:["#000000","#ffffff"], aliases:["New Zealand","NZL"] },
+  "Escócia":{ flagCode:"gb-sct", colors:["#005eb8","#ffffff"], aliases:["Scotland"] },
+  "País de Gales":{ flagCode:"gb-wls", colors:["#ffffff","#c8102e"], aliases:["Wales"] },
+  "Irlanda":{ flagCode:"ie", colors:["#169b62","#ffffff"], aliases:["Ireland","Republic of Ireland"] },
+  "Irlanda do Norte":{ flagCode:"gb-nir", colors:["#ffffff","#c8102e"], aliases:["Northern Ireland"] },
+  "Polônia":{ flagCode:"pl", colors:["#ffffff","#dc143c"], aliases:["Poland"] },
+  "Dinamarca":{ flagCode:"dk", colors:["#c60c30","#ffffff"], aliases:["Denmark"] },
+  "Sérvia":{ flagCode:"rs", colors:["#c6363c","#0c4076"], aliases:["Serbia"] },
+  "Eslováquia":{ flagCode:"sk", colors:["#ffffff","#0b4ea2"], aliases:["Slovakia"] },
+  "Eslovênia":{ flagCode:"si", colors:["#ffffff","#005da4"], aliases:["Slovenia"] },
+  "Ucrânia":{ flagCode:"ua", colors:["#0057b7","#ffd700"], aliases:["Ukraine"] },
+  "Romênia":{ flagCode:"ro", colors:["#002b7f","#fcd116"], aliases:["Romania"] },
+  "Hungria":{ flagCode:"hu", colors:["#ce2939","#ffffff"], aliases:["Hungary"] },
+  "Turquia":{ flagCode:"tr", colors:["#e30a17","#ffffff"], aliases:["Turkey","Türkiye","Turkiye"] },
+  "Grécia":{ flagCode:"gr", colors:["#0d5eaf","#ffffff"], aliases:["Greece"] },
+  "Egito":{ flagCode:"eg", colors:["#ce1126","#ffffff"], aliases:["Egypt"] },
+  "Tunísia":{ flagCode:"tn", colors:["#e70013","#ffffff"], aliases:["Tunisia"] },
+  "Nigéria":{ flagCode:"ng", colors:["#008751","#ffffff"], aliases:["Nigeria"] },
+  "Camarões":{ flagCode:"cm", colors:["#007a5e","#ce1126"], aliases:["Cameroon"] },
+  "Mali":{ flagCode:"ml", colors:["#14b53a","#fcd116"], aliases:["Mali"] },
+  "República Democrática do Congo":{ flagCode:"cd", colors:["#007fff","#f7d618"], aliases:["DR Congo","Congo DR","Democratic Republic of Congo","Congo Democratic Republic"] },
+  "Jamaica":{ flagCode:"jm", colors:["#009b3a","#fed100"], aliases:["Jamaica"] },
+  "Costa Rica":{ flagCode:"cr", colors:["#002b7f","#ce1126"], aliases:["Costa Rica"] },
+  "Honduras":{ flagCode:"hn", colors:["#0073cf","#ffffff"], aliases:["Honduras"] },
+  "El Salvador":{ flagCode:"sv", colors:["#0047ab","#ffffff"], aliases:["El Salvador"] },
+  "Curaçao":{ flagCode:"cw", colors:["#002b7f","#f9e814"], aliases:["Curacao","Curaçao"] },
+  "Bolívia":{ flagCode:"bo", colors:["#d52b1e","#f9e300"], aliases:["Bolivia"] },
+  "Chile":{ flagCode:"cl", colors:["#d52b1e","#0039a6"], aliases:["Chile"] },
+  "Peru":{ flagCode:"pe", colors:["#d91023","#ffffff"], aliases:["Peru"] },
+  "Venezuela":{ flagCode:"ve", colors:["#ffcc00","#00247d"], aliases:["Venezuela"] },
+  "China":{ flagCode:"cn", colors:["#de2910","#ffde00"], aliases:["China","PR China"] },
+  "Iraque":{ flagCode:"iq", colors:["#ce1126","#ffffff"], aliases:["Iraq"] },
+  "Uzbequistão":{ flagCode:"uz", colors:["#1eb6e7","#ffffff"], aliases:["Uzbekistan"] },
+  "Emirados Árabes Unidos":{ flagCode:"ae", colors:["#00732f","#ffffff"], aliases:["United Arab Emirates","UAE"] },
+  "Omã":{ flagCode:"om", colors:["#db161b","#ffffff"], aliases:["Oman"] },
+  "Indonésia":{ flagCode:"id", colors:["#ff0000","#ffffff"], aliases:["Indonesia"] },
+  "Tailândia":{ flagCode:"th", colors:["#a51931","#2d2a4a"], aliases:["Thailand"] },
+  "Vietnã":{ flagCode:"vn", colors:["#da251d","#ffcd00"], aliases:["Vietnam","Viet Nam"] },
+  "Jordânia":{ flagCode:"jo", colors:["#000000","#ffffff"], aliases:["Jordan"] },
+  "Palestina":{ flagCode:"ps", colors:["#000000","#ffffff"], aliases:["Palestine"] },
+
 };
 
 const TEST_MATCHES = [
@@ -1272,8 +1358,8 @@ function normalizeApiMatch(raw){
     internalId:null,
     apiId:String(raw.id || raw.apiId || raw.match_id || raw.fixture_id || ""),
     source:API_CONFIG.provider,
-    phase:raw.phase || raw.stage || raw.round || "Fase indefinida",
-    group:raw.group || raw.groupName || raw.group_name || "",
+    phase:normalizePhaseName(raw.phase || raw.stage || raw.round || raw.matchday || "Fase indefinida"),
+    group:normalizeGroupName(raw.group || raw.groupName || raw.group_name || ""),
     home,
     away,
     homeCode:homeData.flagCode,
@@ -1334,6 +1420,39 @@ function phaseSelectOptions(selectedPhase){
   return PHASE_OPTIONS.map(phase =>
     `<option value="${phase}" ${phase === selectedPhase ? "selected" : ""}>${phase}</option>`
   ).join("");
+}
+
+function normalizePhaseName(rawPhase){
+  const text = String(rawPhase || "").trim();
+
+  if(!text) return "Fase indefinida";
+
+  const n = normalizeString(text);
+
+  if(n.includes("matchday")){
+    const number = text.match(/\d+/)?.[0] || "";
+    return number ? `Rodada ${number}` : "Rodada";
+  }
+
+  if(n.includes("group")) return "Fase de Grupos";
+  if(n.includes("round of 32") || n.includes("32")) return "16 avos";
+  if(n.includes("round of 16") || n.includes("oitavas")) return "Oitavas";
+  if(n.includes("quarter")) return "Quartas";
+  if(n.includes("semi")) return "Semifinal";
+  if(n.includes("third")) return "Disputa de 3º lugar";
+  if(n.includes("final")) return "Final";
+
+  return text
+    .replace(/Group/g, "Grupo")
+    .replace(/Matchday/g, "Rodada");
+}
+
+function normalizeGroupName(rawGroup){
+  const text = String(rawGroup || "").trim();
+
+  if(!text) return "";
+
+  return text.replace(/Group\s*/i, "").replace(/Grupo\s*/i, "").trim();
 }
 
 function validateNormalizedMatch(match){
@@ -1685,11 +1804,24 @@ async function loadMatchesFromFirestore(){
 
   matchesCache = [];
 
+  const seenMatches = new Set();
+
   querySnapshot.forEach(docSnap=>{
-    matchesCache.push({
+    const item = {
       internalId:docSnap.id,
       ...docSnap.data()
-    });
+    };
+
+    const dedupeKey = [
+      normalizeString(item.home),
+      normalizeString(item.away),
+      String(item.date || "").slice(0,16)
+    ].join("|");
+
+    if(seenMatches.has(dedupeKey)) return;
+
+    seenMatches.add(dedupeKey);
+    matchesCache.push(item);
   });
 
   localStorage.setItem("bolao_matches_cache", JSON.stringify({
@@ -2813,18 +2945,36 @@ function loadPublicScreen(){
 
   const now = new Date();
 
-  const nextMatches = matchesCache
-    .filter(m=>new Date(m.date) > now)
+  const uniquePublicMatches = [];
+  const seenPublic = new Set();
+
+  matchesCache.forEach(m=>{
+    const key = [
+      normalizeString(m.home),
+      normalizeString(m.away),
+      String(m.date || "").slice(0,16)
+    ].join("|");
+
+    if(seenPublic.has(key)) return;
+
+    seenPublic.add(key);
+    uniquePublicMatches.push(m);
+  });
+
+  const nextMatches = uniquePublicMatches
+    .filter(m=>new Date(m.date) > now && m.status !== "finished")
+    .sort((a,b)=>new Date(a.date) - new Date(b.date))
     .slice(0,5);
 
-  const lastResults = matchesCache
+  const lastResults = uniquePublicMatches
     .filter(m=>m.status === "finished")
-    .slice(-5)
-    .reverse();
+    .sort((a,b)=>new Date(b.date) - new Date(a.date))
+    .slice(0,5);
 
   if(nextBox){
     nextBox.innerHTML = nextMatches.map(m=>`
       <div class="publicMatchCard">
+        <div class="countryBar" style="background:${countryBar(m.home, m.away)};"></div>
         <div class="publicTeams">
           <div class="publicTeam">
             <img class="flag" src="${flagUrl(m.homeCode)}" alt="${m.home}">
@@ -2848,12 +2998,13 @@ function loadPublicScreen(){
   if(resultsBox){
     resultsBox.innerHTML = lastResults.map(m=>`
       <div class="publicMatchCard">
+        <div class="countryBar" style="background:${countryBar(m.home, m.away)};"></div>
         <div class="publicTeams">
           <div class="publicTeam">
             <img class="flag" src="${flagUrl(m.homeCode)}" alt="${m.home}">
             <span>${m.home}</span>
           </div>
-          <div class="vs">${m.homeScore} x ${m.awayScore}</div>
+          <div class="publicScore">${m.homeScore}<br>x<br>${m.awayScore}</div>
           <div class="publicTeam away">
             <span>${m.away}</span>
             <img class="flag" src="${flagUrl(m.awayCode)}" alt="${m.away}">
@@ -2871,6 +3022,76 @@ function loadPublicScreen(){
 /* ============================================================
    ADMIN / BACKUP / EXCLUSÃO / ROLLBACK / STATUS
 ============================================================ */
+
+window.deleteTestMatches = async function(){
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode limpar jogos de teste.");
+    return;
+  }
+
+  const confirmText = prompt("Digite LIMPAR TESTES para remover jogos de teste.");
+
+  if(confirmText !== "LIMPAR TESTES"){
+    alert("Operação cancelada.");
+    return;
+  }
+
+  const snap = await getDocs(collection(db, COLLECTIONS.matches));
+  let count = 0;
+
+  for(const docSnap of snap.docs){
+    const match = docSnap.data();
+    const isTest =
+      match.source === "test" ||
+      String(match.apiId || "").startsWith("test_") ||
+      String(docSnap.id || "").includes("_test_");
+
+    if(isTest){
+      await deleteDoc(doc(db, COLLECTIONS.matches, docSnap.id));
+      count++;
+    }
+  }
+
+  await logAdminAction("test_matches_deleted", {count});
+
+  alert(`${count} jogos de teste removidos.`);
+
+  await loadMatchesFromFirestore();
+  loadGroups();
+  loadPublicScreen();
+}
+
+window.deleteAllMatches = async function(){
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode excluir jogos.");
+    return;
+  }
+
+  const confirmText = prompt("Digite EXCLUIR JOGOS para remover todos os jogos cadastrados.");
+
+  if(confirmText !== "EXCLUIR JOGOS"){
+    alert("Operação cancelada.");
+    return;
+  }
+
+  await createSnapshot("delete_all_matches", matchesCache);
+
+  const snap = await getDocs(collection(db, COLLECTIONS.matches));
+  let count = 0;
+
+  for(const docSnap of snap.docs){
+    await deleteDoc(doc(db, COLLECTIONS.matches, docSnap.id));
+    count++;
+  }
+
+  await logAdminAction("all_matches_deleted", {count});
+
+  alert(`${count} jogos removidos.`);
+
+  await loadMatchesFromFirestore();
+  loadGroups();
+  loadPublicScreen();
+}
 
 window.exportBackupCsv = async function(){
 
