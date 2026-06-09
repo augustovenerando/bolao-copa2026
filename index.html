@@ -1,10 +1,11 @@
-!
+!!!
 
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Bolão Copa 2026</title>
 
   <style>
@@ -20,6 +21,7 @@
       --yellow:#eaff2e;
       --black:#050505;
       --white:#ffffff;
+      --soft:#f3f4f6;
     }
 
     body{
@@ -32,6 +34,7 @@
       background-size:cover;
       background-position:center;
       background-attachment:fixed;
+      color:var(--black);
     }
 
     .container{
@@ -41,7 +44,7 @@
     }
 
     .hero{
-      background:rgba(0,0,0,.82);
+      background:rgba(0,0,0,.84);
       border:4px solid var(--yellow);
       border-radius:28px;
       padding:24px;
@@ -85,6 +88,20 @@
       background:linear-gradient(90deg,var(--red),var(--orange),var(--purple),var(--blue),var(--cyan),var(--green),var(--yellow));
     }
 
+    .userHeader{
+      background:rgba(0,0,0,.78);
+      border:2px solid rgba(255,255,255,.7);
+      color:white;
+      border-radius:18px;
+      padding:14px 18px;
+      box-shadow:0 8px 24px rgba(0,0,0,.25);
+    }
+
+    .userHeader h2{
+      margin:0;
+      color:white;
+    }
+
     .card{
       background:rgba(255,255,255,.96);
       border-radius:22px;
@@ -93,7 +110,7 @@
       box-shadow:0 12px 30px rgba(0,0,0,.22);
     }
 
-    input, select{
+    input, select, textarea{
       width:100%;
       padding:12px;
       border:2px solid #ddd;
@@ -102,6 +119,8 @@
       font-size:15px;
       background:white;
     }
+
+    textarea{ min-height:80px; resize:vertical; }
 
     button{
       border:none;
@@ -112,6 +131,7 @@
       font-weight:bold;
       background:var(--black);
       color:white;
+      margin:2px;
     }
 
     button:disabled{
@@ -120,6 +140,10 @@
     }
 
     .logoutBtn{ background:var(--red); }
+    .adminBtn{ background:#6d00e8; }
+    .saveAdminBtn{ background:#087f23; }
+    .dangerBtn{ background:#dc2626; }
+    .secondaryBtn{ background:#374151; }
 
     .topBar{
       display:flex;
@@ -158,6 +182,22 @@
       font-weight:bold;
       margin-top:8px;
     }
+
+    .statusPill{
+      display:inline-block;
+      padding:5px 9px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:bold;
+      background:#e5e7eb;
+      color:#111827;
+      margin-top:6px;
+    }
+
+    .statusPill.green{ background:#dcfce7; color:#166534; }
+    .statusPill.red{ background:#fee2e2; color:#991b1b; }
+    .statusPill.yellow{ background:#fef9c3; color:#854d0e; }
+    .statusPill.blue{ background:#dbeafe; color:#1d4ed8; }
 
     .screen{ display:none; }
     .screen.active{ display:block; }
@@ -271,7 +311,7 @@
       border:2px solid var(--black);
     }
 
-    .groupGrid{
+    .groupGrid,.statsGrid,.adminGrid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
       gap:16px;
@@ -296,6 +336,7 @@
     td{
       padding:9px;
       border-bottom:1px solid #eee;
+      vertical-align:top;
     }
 
     .teamCell{
@@ -319,6 +360,17 @@
     .adminNotice{
       display:inline-block;
       background:var(--orange);
+      color:white;
+      padding:5px 9px;
+      border-radius:999px;
+      font-size:12px;
+      margin-top:8px;
+      font-weight:bold;
+    }
+
+    .validatedNotice{
+      display:inline-block;
+      background:#2563eb;
       color:white;
       padding:5px 9px;
       border-radius:999px;
@@ -357,88 +409,23 @@
       line-height:1.5;
     }
 
-    .adminBtn{
-      background:#6d00e8;
-      margin-top:10px;
+    .rulesBox{
+      line-height:1.55;
     }
 
-    .saveAdminBtn{
-      background:#087f23;
-    }
-
-    .userHeaderBox{
-      display:inline-block;
-      background:rgba(255,255,255,.94);
-      color:#050505;
-      padding:14px 18px;
+    .publicHero{
+      background:rgba(0,0,0,.78);
+      color:white;
+      padding:18px;
       border-radius:18px;
-      box-shadow:0 10px 24px rgba(0,0,0,.25);
-      border:2px solid rgba(255,255,255,.75);
+      margin-bottom:14px;
     }
 
-    .userHeaderBox h2{
-      margin:0;
-    }
-
-    .dangerBox{
-      margin-top:18px;
-      padding:16px;
-      border-radius:18px;
-      background:#fff1f2;
-      border:3px solid #dc2626;
-    }
-
-    .dangerBtn{
-      background:#dc2626;
-    }
-
-    .apiBtn{
-      background:#005846;
-      margin-top:8px;
-    }
-
-
-
-    .backupBtn{
-      background:#242b7f;
-      margin-top:8px;
-    }
-
-    .publicGrid,
-    .statsGrid,
-    .achievementsGrid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-      gap:14px;
-    }
-
-    .miniCard{
-      background:#f9fafb;
-      border:2px solid #e5e7eb;
-      border-radius:16px;
-      padding:14px;
-    }
-
-    .miniCard strong{
-      display:block;
-      margin-bottom:6px;
-    }
-
-    .achievementCard{
-      background:linear-gradient(135deg,#ffffff,#f3f4f6);
-      border:2px solid #111;
-      border-radius:18px;
-      padding:14px;
-    }
-
-    .achievementTitle{
-      font-size:16px;
-      font-weight:bold;
-      margin-bottom:6px;
-    }
-
-    .achievementValue{
-      font-size:14px;
+    .loader{
+      padding:12px;
+      background:#f3f4f6;
+      border-radius:12px;
+      font-size:13px;
       color:#444;
     }
 
@@ -472,12 +459,16 @@
 
   <div id="loginScreen" class="card">
     <h2>Entrar no bolão</h2>
+    <p class="smallText">
+      Use seu e-mail apenas para identificar uma conta única no bolão. Não há autenticação por senha.
+    </p>
 
     <input type="email" id="email" placeholder="Seu e-mail" />
 
     <input type="text" id="displayName" placeholder="Nome de exibição" style="display:none;" />
 
     <button onclick="enterBolao()">Entrar</button>
+    <button class="secondaryBtn" onclick="openPublicMode()">Ver ranking público</button>
 
     <div id="loginMessage"></div>
   </div>
@@ -485,7 +476,7 @@
   <div id="dashboard" style="display:none;">
 
     <div class="topBar">
-      <div class="userHeaderBox">
+      <div class="userHeader">
         <h2 id="welcomeText"></h2>
         <span class="badge">Seu painel do bolão</span>
       </div>
@@ -495,22 +486,36 @@
 
     <div id="adminPanel" class="card adminBox" style="display:none;">
       <h2>Área do ADMIN</h2>
-      <p class="smallText">
-        Use este painel para importar jogos de teste e recalcular o ranking.
-      </p>
-      <button onclick="importTestMatches()">Importar Jogos de Teste</button>
-      <button class="apiBtn" onclick="syncWorldCupApi()">Sincronizar API da Copa</button>
-      <button onclick="recalculateRanking()" style="margin-top:8px;">Recalcular Ranking</button>
-      <button class="backupBtn" onclick="exportBackupCsv()">Exportar backup CSV</button>
 
-      <div class="dangerBox">
-        <h3>Apagar cadastro</h3>
-        <p class="smallText">
-          Esta ação apaga o cadastro, palpites, histórico de palpites, palpite de campeão e histórico de campeão do e-mail informado.
-        </p>
-        <input type="email" id="deleteUserEmail" placeholder="E-mail do participante" />
-        <button onclick="findUserToDelete()">Buscar cadastro</button>
-        <div id="deleteUserPreview" class="smallText" style="margin-top:10px;"></div>
+      <div class="adminGrid">
+        <div>
+          <h3>Operação</h3>
+          <button onclick="importTestMatches()">Importar Jogos de Teste</button>
+          <button onclick="syncApiMatches()" class="adminBtn">Sincronizar API da Copa</button>
+          <button onclick="recalculateRanking()" class="secondaryBtn">Recalcular Ranking</button>
+          <button onclick="exportBackupCsv()" class="secondaryBtn">Exportar Backup CSV</button>
+          <button onclick="restoreLastSyncSnapshot()" class="dangerBtn">Restaurar última sync</button>
+        </div>
+
+        <div>
+          <h3>Excluir cadastro</h3>
+          <p class="smallText">
+            Apaga usuário, palpites atuais, históricos e palpite de campeão. O ADMIN não pode ser excluído.
+          </p>
+          <input type="email" id="deleteUserEmail" placeholder="E-mail do participante" />
+          <button class="dangerBtn" onclick="deleteUserByEmail()">Apagar cadastro e histórico</button>
+        </div>
+
+        <div>
+          <h3>Status do sistema</h3>
+          <div id="systemStatusBox" class="smallText">Carregando...</div>
+        </div>
+
+        <div>
+          <h3>Fila da API</h3>
+          <button onclick="loadApiReviewQueue()" class="adminBtn">Atualizar pendências</button>
+          <div id="apiReviewQueueBox" class="smallText">Nenhuma consulta realizada ainda.</div>
+        </div>
       </div>
 
       <div id="adminMessage"></div>
@@ -520,9 +525,9 @@
       <button class="tabBtn active" onclick="showScreen('matchesScreen', this)">⚽ Jogos</button>
       <button class="tabBtn" onclick="showScreen('championScreen', this)">🏆 Campeão</button>
       <button class="tabBtn" onclick="showScreen('rankingScreen', this)">🏅 Ranking</button>
-      <button class="tabBtn" onclick="showScreen('achievementsScreen', this)">🎯 Conquistas</button>
       <button class="tabBtn" onclick="showScreen('groupsScreen', this)">📊 Grupos</button>
-      <button class="tabBtn" onclick="showScreen('publicScreen', this)">📺 Tela pública</button>
+      <button class="tabBtn" onclick="showScreen('rulesScreen', this)">📜 Regras</button>
+      <button class="tabBtn" onclick="showScreen('publicScreen', this)">📺 Público</button>
     </div>
 
     <div id="matchesScreen" class="screen active card">
@@ -553,11 +558,9 @@
     <div id="rankingScreen" class="screen card">
       <h2>🏅 Ranking Geral</h2>
       <div id="rankingList">Carregando ranking...</div>
-    </div>
 
-    <div id="achievementsScreen" class="screen card">
-      <h2>🎯 Conquistas e Estatísticas</h2>
-      <div id="achievementsList">Carregando conquistas...</div>
+      <h3>Conquistas e estatísticas</h3>
+      <div id="achievementsList" class="statsGrid">Carregando conquistas...</div>
     </div>
 
     <div id="groupsScreen" class="screen card">
@@ -565,10 +568,74 @@
       <div id="groupsList">Carregando classificação...</div>
     </div>
 
+    <div id="rulesScreen" class="screen card rulesBox">
+      <h2>📜 Regras do Bolão</h2>
+
+      <h3>Pontuação por jogo</h3>
+      <p>
+        Placar exato: <strong>15 pontos</strong>. Acerto apenas do vencedor ou empate: <strong>5 pontos</strong>.
+        Erro do vencedor/empate: <strong>0 ponto</strong>.
+      </p>
+
+      <h3>Prazo dos palpites</h3>
+      <p>
+        Cada palpite pode ser criado ou alterado até <strong>1 hora antes</strong> do início do jogo.
+        Depois do prazo, o palpite fica bloqueado.
+      </p>
+
+      <h3>Prorrogação e pênaltis</h3>
+      <p>
+        O resultado válido considera tempo normal, acréscimos e prorrogação.
+        Disputa por pênaltis não altera o placar do bolão: se o jogo for para os pênaltis, o resultado do bolão é empate.
+      </p>
+
+      <h3>Palpite de campeão</h3>
+      <p>
+        Antes do primeiro jogo: 100 pontos. Fase de grupos: 75. 16 avos: 60. Oitavas: 45.
+        Quartas: 30. Semifinal: 15. Final: 5.
+      </p>
+
+      <h3>Desempates</h3>
+      <p>
+        1) maior pontuação total; 2) mais placares exatos; 3) mais acertos de vencedor/empate;
+        4) quem registrou antes o palpite correto no jogo relacionado ao empate.
+      </p>
+
+      <h3>Alterações administrativas</h3>
+      <p>
+        Alterações feitas manualmente pelo ADMIN aparecem como <strong>“Dado inserido pelo administrador”</strong>.
+        Alterações sugeridas pela API e aprovadas pelo ADMIN aparecem como
+        <strong>“Alteração validada pelo administrador”</strong>.
+      </p>
+
+      <h3>Falha catastrófica</h3>
+      <p>
+        Em caso de falha catastrófica que impeça a continuidade confiável e rastreável do bolão,
+        valerá como ranking final o último ranking da última rodada válida concluída,
+        desconsiderando pontuações bônus futuras. O administrador poderá validar os logs disponíveis
+        e gerar planilha CSV/Excel para continuidade manual, se necessário.
+      </p>
+
+      <h3>Privacidade</h3>
+      <p>
+        O e-mail é usado apenas para evitar duplicidade de cadastro e identificar os palpites.
+      </p>
+    </div>
+
     <div id="publicScreen" class="screen card">
-      <h2>📺 Tela pública do bolão</h2>
-      <p class="smallText">Área pensada para compartilhar em TV, WhatsApp ou telão. Por enquanto aparece dentro do painel; depois podemos transformar em link sem login.</p>
-      <div id="publicView">Carregando tela pública...</div>
+      <div class="publicHero">
+        <h2>📺 Tela pública do bolão</h2>
+        <p>Ranking, próximos jogos, últimos resultados e classificação dos grupos.</p>
+      </div>
+
+      <h3>Ranking</h3>
+      <div id="publicRankingList">Carregando...</div>
+
+      <h3>Próximos jogos</h3>
+      <div id="publicNextMatches">Carregando...</div>
+
+      <h3>Últimos resultados</h3>
+      <div id="publicLastResults">Carregando...</div>
     </div>
 
   </div>
@@ -576,6 +643,218 @@
 </div>
 
 <script type="module">
+
+/* ============================================================
+   ÁREA DE CONFIGURAÇÃO / API
+   Para trocar de API no futuro, altere principalmente:
+   - API_CONFIG
+   - fetchExternalMatches()
+   - normalizeApiMatch()
+   O restante do bolão usa o modelo interno padronizado.
+============================================================ */
+
+const APP_VERSION = "v2.0.0-pre-api-modular";
+const SCHEMA_VERSION = "1.0";
+
+const API_CONFIG = {
+  provider:"rezarahiminia_worldcup2026_candidate",
+  enabled:true,
+  // Endpoint placeholder. Validaremos/trocaremos na etapa específica da API.
+  matchesEndpoint:"https://raw.githubusercontent.com/rezarahiminia/worldcup2026/main/data/matches.json",
+  fallbackMode:true
+};
+
+const ADMIN_EMAIL = "acvs@uol.com.br";
+const ADMIN_NAME = "ADMIN";
+
+const COLLECTIONS = {
+  users:"users",
+  matches:"matches",
+  predictions:"predictions",
+  predictionHistory:"predictionHistory",
+  championPredictions:"championPredictions",
+  championPredictionHistory:"championPredictionHistory",
+  adminLogs:"adminLogs",
+  apiReviewQueue:"apiReviewQueue",
+  syncSnapshots:"syncSnapshots",
+  systemStatus:"systemStatus"
+};
+
+const TEAM_DICTIONARY = {
+  "Alemanha":{ flagCode:"de", colors:["#000000","#dd0000","#ffce00"], aliases:["Germany","Deutschland","GER"] },
+  "Arábia Saudita":{ flagCode:"sa", colors:["#00843d","#ffffff"], aliases:["Saudi Arabia","KSA"] },
+  "Argélia":{ flagCode:"dz", colors:["#ffffff","#006233"], aliases:["Algeria"] },
+  "Argentina":{ flagCode:"ar", colors:["#74acdf","#ffffff"], aliases:["Argentina","ARG"] },
+  "Austrália":{ flagCode:"au", colors:["#ffcd00","#00843d"], aliases:["Australia","AUS"] },
+  "Áustria":{ flagCode:"at", colors:["#ed2939","#ffffff"], aliases:["Austria"] },
+  "Bélgica":{ flagCode:"be", colors:["#fae042","#ed2939"], aliases:["Belgium"] },
+  "Brasil":{ flagCode:"br", colors:["#009739","#ffdf00"], aliases:["Brazil","BRA"] },
+  "Cabo Verde":{ flagCode:"cv", colors:["#003893","#ffffff"], aliases:["Cape Verde","Cabo Verde"] },
+  "Canadá":{ flagCode:"ca", colors:["#ff0000","#ffffff"], aliases:["Canada"] },
+  "Catar":{ flagCode:"qa", colors:["#8a1538","#ffffff"], aliases:["Qatar"] },
+  "Colômbia":{ flagCode:"co", colors:["#fcd116","#ce1126"], aliases:["Colombia"] },
+  "Coreia do Sul":{ flagCode:"kr", colors:["#c60c30","#003478","#ffffff"], aliases:["South Korea","Korea Republic","Republic of Korea"] },
+  "Costa do Marfim":{ flagCode:"ci", colors:["#f77f00","#009e60"], aliases:["Ivory Coast","Côte d'Ivoire","Cote dIvoire"] },
+  "Croácia":{ flagCode:"hr", colors:["#ff0000","#ffffff"], aliases:["Croatia"] },
+  "Equador":{ flagCode:"ec", colors:["#ffdd00","#034ea2"], aliases:["Ecuador"] },
+  "Espanha":{ flagCode:"es", colors:["#c60b1e","#0039a6"], aliases:["Spain"] },
+  "Estados Unidos":{ flagCode:"us", colors:["#ffffff","#b31942"], aliases:["USA","United States","United States of America","USMNT"] },
+  "França":{ flagCode:"fr", colors:["#002654","#ffffff"], aliases:["France"] },
+  "Gana":{ flagCode:"gh", colors:["#ffffff","#ce1126"], aliases:["Ghana"] },
+  "Holanda":{ flagCode:"nl", colors:["#ff6600"], aliases:["Netherlands","Holland"] },
+  "Inglaterra":{ flagCode:"gb-eng", colors:["#ffffff","#cf142b"], aliases:["England"] },
+  "Irã":{ flagCode:"ir", colors:["#ffffff","#da0000"], aliases:["Iran","IR Iran"] },
+  "Japão":{ flagCode:"jp", colors:["#001e62","#ffffff"], aliases:["Japan"] },
+  "Marrocos":{ flagCode:"ma", colors:["#c1272d","#006233"], aliases:["Morocco"] },
+  "México":{ flagCode:"mx", colors:["#006847","#ffffff","#ce1126"], aliases:["Mexico"] },
+  "Noruega":{ flagCode:"no", colors:["#ba0c2f","#00205b"], aliases:["Norway"] },
+  "Panamá":{ flagCode:"pa", colors:["#d21034","#005293"], aliases:["Panama"] },
+  "Paraguai":{ flagCode:"py", colors:["#ffffff","#d52b1e"], aliases:["Paraguay"] },
+  "Portugal":{ flagCode:"pt", colors:["#ff0000","#006600"], aliases:["Portugal"] },
+  "Senegal":{ flagCode:"sn", colors:["#ffffff","#00853f"], aliases:["Senegal"] },
+  "Suécia":{ flagCode:"se", colors:["#fecc00","#006aa7"], aliases:["Sweden"] },
+  "Suíça":{ flagCode:"ch", colors:["#ff0000","#ffffff"], aliases:["Switzerland","Swiss"] },
+  "Uruguai":{ flagCode:"uy", colors:["#75aadb"], aliases:["Uruguay"] }
+};
+
+const TEST_MATCHES = [
+  {
+    internalId:"wc2026_group_a_brasil_argentina_2026_06_11",
+    apiId:"test_m1",
+    source:"test",
+    group:"A",
+    phase:"Fase de Grupos",
+    home:"Brasil",
+    away:"Argentina",
+    homeCode:"br",
+    awayCode:"ar",
+    date:"2026-06-11T16:00:00",
+    stadium:"Estádio Azteca",
+    city:"Cidade do México",
+    country:"México",
+    homeScore:null,
+    awayScore:null,
+    status:"scheduled",
+    adminOverride:false,
+    validatedByAdmin:false,
+    validationNotice:null,
+    schemaVersion:SCHEMA_VERSION
+  },
+  {
+    internalId:"wc2026_group_a_franca_espanha_2026_06_12",
+    apiId:"test_m2",
+    source:"test",
+    group:"A",
+    phase:"Fase de Grupos",
+    home:"França",
+    away:"Espanha",
+    homeCode:"fr",
+    awayCode:"es",
+    date:"2026-06-12T19:00:00",
+    stadium:"MetLife Stadium",
+    city:"Nova York/Nova Jersey",
+    country:"Estados Unidos",
+    homeScore:2,
+    awayScore:1,
+    status:"finished",
+    adminOverride:false,
+    validatedByAdmin:false,
+    validationNotice:null,
+    schemaVersion:SCHEMA_VERSION
+  },
+  {
+    internalId:"wc2026_group_a_brasil_franca_2026_06_16",
+    apiId:"test_m3",
+    source:"test",
+    group:"A",
+    phase:"Fase de Grupos",
+    home:"Brasil",
+    away:"França",
+    homeCode:"br",
+    awayCode:"fr",
+    date:"2026-06-16T16:00:00",
+    stadium:"SoFi Stadium",
+    city:"Los Angeles",
+    country:"Estados Unidos",
+    homeScore:1,
+    awayScore:1,
+    status:"finished",
+    adminOverride:true,
+    validatedByAdmin:false,
+    validationNotice:"Dado inserido pelo administrador",
+    schemaVersion:SCHEMA_VERSION
+  },
+  {
+    internalId:"wc2026_group_a_argentina_espanha_2026_06_17",
+    apiId:"test_m4",
+    source:"test",
+    group:"A",
+    phase:"Fase de Grupos",
+    home:"Argentina",
+    away:"Espanha",
+    homeCode:"ar",
+    awayCode:"es",
+    date:"2026-06-17T19:00:00",
+    stadium:"AT&T Stadium",
+    city:"Dallas",
+    country:"Estados Unidos",
+    homeScore:0,
+    awayScore:2,
+    status:"finished",
+    adminOverride:false,
+    validatedByAdmin:false,
+    validationNotice:null,
+    schemaVersion:SCHEMA_VERSION
+  },
+  {
+    internalId:"wc2026_group_b_inglaterra_portugal_2026_06_13",
+    apiId:"test_m5",
+    source:"test",
+    group:"B",
+    phase:"Fase de Grupos",
+    home:"Inglaterra",
+    away:"Portugal",
+    homeCode:"gb-eng",
+    awayCode:"pt",
+    date:"2026-06-13T16:00:00",
+    stadium:"Hard Rock Stadium",
+    city:"Miami",
+    country:"Estados Unidos",
+    homeScore:3,
+    awayScore:2,
+    status:"finished",
+    adminOverride:false,
+    validatedByAdmin:false,
+    validationNotice:null,
+    schemaVersion:SCHEMA_VERSION
+  },
+  {
+    internalId:"wc2026_group_b_alemanha_uruguai_2026_06_14",
+    apiId:"test_m6",
+    source:"test",
+    group:"B",
+    phase:"Fase de Grupos",
+    home:"Alemanha",
+    away:"Uruguai",
+    homeCode:"de",
+    awayCode:"uy",
+    date:"2026-06-14T19:00:00",
+    stadium:"BMO Field",
+    city:"Toronto",
+    country:"Canadá",
+    homeScore:1,
+    awayScore:1,
+    status:"finished",
+    adminOverride:false,
+    validatedByAdmin:false,
+    validationNotice:null,
+    schemaVersion:SCHEMA_VERSION
+  }
+];
+
+/* ============================================================
+   FIREBASE
+============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
@@ -591,7 +870,9 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
-  orderBy
+  orderBy,
+  limit,
+  serverTimestamp
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -607,201 +888,401 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* =========================================================
-   ÁREA DE INTEGRAÇÃO DA API DA COPA
-   No futuro, para trocar a API, altere principalmente este bloco
-   e as funções de normalização logo abaixo dele.
-========================================================= */
-const API_CONFIG = {
-  enabled:true,
-  provider:"worldcup26.ir",
-  gamesUrl:"https://worldcup26.ir/get/games",
-  sourceLabel:"worldcup26.ir"
-};
-
-const ADMIN_EMAIL = "acvs@uol.com.br";
-const ADMIN_NAME = "ADMIN";
+/* ============================================================
+   ESTADO GLOBAL
+============================================================ */
 
 let currentUser = null;
 let matchesCache = [];
-
-const teamColors = {
-  "Alemanha":["#000000","#dd0000","#ffce00"],
-  "Arábia Saudita":["#00843d","#ffffff"],
-  "Argélia":["#ffffff","#006233"],
-  "Argentina":["#74acdf","#ffffff"],
-  "Austrália":["#ffcd00","#00843d"],
-  "Áustria":["#ed2939","#ffffff"],
-  "Bélgica":["#fae042","#ed2939"],
-  "Brasil":["#009739","#ffdf00"],
-  "Cabo Verde":["#003893","#ffffff"],
-  "Canadá":["#ff0000","#ffffff"],
-  "Catar":["#8a1538","#ffffff"],
-  "Colômbia":["#fcd116","#ce1126"],
-  "Coreia do Sul":["#c60c30","#003478","#ffffff"],
-  "Costa do Marfim":["#f77f00","#009e60"],
-  "Croácia":["#ff0000","#ffffff"],
-  "Equador":["#ffdd00","#034ea2"],
-  "Espanha":["#c60b1e","#0039a6"],
-  "Estados Unidos":["#ffffff","#b31942"],
-  "França":["#002654","#ffffff"],
-  "Gana":["#ffffff","#ce1126"],
-  "Holanda":["#ff6600"],
-  "Inglaterra":["#ffffff","#cf142b"],
-  "Irã":["#ffffff","#da0000"],
-  "Japão":["#001e62","#ffffff"],
-  "Marrocos":["#c1272d","#006233"],
-  "México":["#006847","#ffffff","#ce1126"],
-  "Noruega":["#ba0c2f","#00205b"],
-  "Panamá":["#d21034","#005293"],
-  "Paraguai":["#ffffff","#d52b1e"],
-  "Portugal":["#ff0000","#006600"],
-  "Senegal":["#ffffff","#00853f"],
-  "Suécia":["#fecc00","#006aa7"],
-  "Suíça":["#ff0000","#ffffff"],
-  "Uruguai":["#75aadb"]
+let usersCache = [];
+let rankingCache = [];
+let apiStatus = {
+  online:false,
+  lastSyncAt:null,
+  message:"API ainda não sincronizada."
 };
 
-const apiNameToPt = {
-  "Germany":"Alemanha",
-  "Saudi Arabia":"Arábia Saudita",
-  "Algeria":"Argélia",
-  "Argentina":"Argentina",
-  "Australia":"Austrália",
-  "Austria":"Áustria",
-  "Belgium":"Bélgica",
-  "Brazil":"Brasil",
-  "Cape Verde":"Cabo Verde",
-  "Canada":"Canadá",
-  "Qatar":"Catar",
-  "Colombia":"Colômbia",
-  "South Korea":"Coreia do Sul",
-  "Korea Republic":"Coreia do Sul",
-  "Ivory Coast":"Costa do Marfim",
-  "Côte d'Ivoire":"Costa do Marfim",
-  "Croatia":"Croácia",
-  "Ecuador":"Equador",
-  "Spain":"Espanha",
-  "United States":"Estados Unidos",
-  "USA":"Estados Unidos",
-  "France":"França",
-  "Ghana":"Gana",
-  "Netherlands":"Holanda",
-  "England":"Inglaterra",
-  "Iran":"Irã",
-  "Japan":"Japão",
-  "Morocco":"Marrocos",
-  "Mexico":"México",
-  "Norway":"Noruega",
-  "Panama":"Panamá",
-  "Paraguay":"Paraguai",
-  "Portugal":"Portugal",
-  "Senegal":"Senegal",
-  "Sweden":"Suécia",
-  "Switzerland":"Suíça",
-  "Uruguay":"Uruguai"
-};
+/* ============================================================
+   FUNÇÕES UTILITÁRIAS
+============================================================ */
 
-const apiCodeToFlagcdn = {
-  "ARG":"ar", "AUS":"au", "AUT":"at", "BEL":"be", "BRA":"br", "CAN":"ca", "COL":"co",
-  "CRO":"hr", "ECU":"ec", "ENG":"gb-eng", "FRA":"fr", "GER":"de", "GHA":"gh", "IRN":"ir",
-  "JPN":"jp", "KOR":"kr", "MAR":"ma", "MEX":"mx", "NED":"nl", "PAN":"pa", "PAR":"py",
-  "POR":"pt", "QAT":"qa", "KSA":"sa", "SEN":"sn", "ESP":"es", "SUI":"ch", "URU":"uy",
-  "USA":"us", "ALG":"dz", "CPV":"cv", "CIV":"ci", "SWE":"se"
-};
+function normalizeString(value){
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
 
-const testMatches = [
-  {
-    id:"m1",
-    group:"A",
-    phase:"Fase de Grupos",
-    home:"Brasil",
-    away:"Argentina",
-    homeCode:"br",
-    awayCode:"ar",
-    date:"2026-06-11T16:00:00",
-    stadium:"Estádio Azteca, Cidade do México",
-    homeScore:null,
-    awayScore:null,
-    status:"scheduled",
-    adminOverride:false
-  },
-  {
-    id:"m2",
-    group:"A",
-    phase:"Fase de Grupos",
-    home:"França",
-    away:"Espanha",
-    homeCode:"fr",
-    awayCode:"es",
-    date:"2026-06-12T19:00:00",
-    stadium:"MetLife Stadium, Nova York/Nova Jersey",
-    homeScore:2,
-    awayScore:1,
-    status:"finished",
-    adminOverride:false
-  },
-  {
-    id:"m3",
-    group:"A",
-    phase:"Fase de Grupos",
-    home:"Brasil",
-    away:"França",
-    homeCode:"br",
-    awayCode:"fr",
-    date:"2026-06-16T16:00:00",
-    stadium:"SoFi Stadium, Los Angeles",
-    homeScore:1,
-    awayScore:1,
-    status:"finished",
-    adminOverride:true
-  },
-  {
-    id:"m4",
-    group:"A",
-    phase:"Fase de Grupos",
-    home:"Argentina",
-    away:"Espanha",
-    homeCode:"ar",
-    awayCode:"es",
-    date:"2026-06-17T19:00:00",
-    stadium:"AT&T Stadium, Dallas",
-    homeScore:0,
-    awayScore:2,
-    status:"finished",
-    adminOverride:false
-  },
-  {
-    id:"m5",
-    group:"B",
-    phase:"Fase de Grupos",
-    home:"Inglaterra",
-    away:"Portugal",
-    homeCode:"gb-eng",
-    awayCode:"pt",
-    date:"2026-06-13T16:00:00",
-    stadium:"Hard Rock Stadium, Miami",
-    homeScore:3,
-    awayScore:2,
-    status:"finished",
-    adminOverride:false
-  },
-  {
-    id:"m6",
-    group:"B",
-    phase:"Fase de Grupos",
-    home:"Alemanha",
-    away:"Uruguai",
-    homeCode:"de",
-    awayCode:"uy",
-    date:"2026-06-14T19:00:00",
-    stadium:"BMO Field, Toronto",
-    homeScore:1,
-    awayScore:1,
-    status:"finished",
-    adminOverride:false
+function slugify(value){
+  return normalizeString(value)
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function findStandardTeamName(rawName){
+  const normalizedRaw = normalizeString(rawName);
+
+  for(const [standardName, data] of Object.entries(TEAM_DICTIONARY)){
+    if(normalizeString(standardName) === normalizedRaw){
+      return standardName;
+    }
+
+    for(const alias of data.aliases || []){
+      if(normalizeString(alias) === normalizedRaw){
+        return standardName;
+      }
+    }
   }
-];
+
+  return rawName || "Seleção indefinida";
+}
+
+function getTeamData(teamName){
+  const standard = findStandardTeamName(teamName);
+  return TEAM_DICTIONARY[standard] || {
+    flagCode:"un",
+    colors:["#111111","#cccccc"],
+    aliases:[]
+  };
+}
+
+function buildInternalId(match){
+  const datePart = String(match.date || "").slice(0,10).replaceAll("-","_");
+  return [
+    "wc2026",
+    slugify(match.phase || "fase"),
+    match.group ? "group_" + slugify(match.group) : "knockout",
+    slugify(match.home),
+    slugify(match.away),
+    datePart
+  ].join("_");
+}
+
+function flagUrl(code){
+  return `https://flagcdn.com/w40/${code}.png`;
+}
+
+function formatDate(dateString){
+  if(!dateString) return "-";
+  return new Date(dateString).toLocaleString("pt-BR", {
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+}
+
+function dateTimeLocalValue(dateString){
+  if(!dateString) return "";
+  const date = new Date(dateString);
+  const pad = n => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function getLockDate(dateString){
+  return new Date(new Date(dateString).getTime() - 60 * 60 * 1000);
+}
+
+function formatLockDate(dateString){
+  if(!dateString) return "-";
+  return getLockDate(dateString).toLocaleString("pt-BR", {
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+}
+
+function isLocked(dateString){
+  return new Date() >= getLockDate(dateString);
+}
+
+function getPredictionWindowStatus(match){
+  if(!match.date) return "Indisponível";
+
+  const now = new Date();
+  const lock = getLockDate(match.date);
+  const diffMs = lock - now;
+
+  if(diffMs <= 0) return "Palpites encerrados";
+
+  const diffMin = Math.floor(diffMs / 60000);
+
+  if(diffMin <= 60){
+    return `Fecha em ${diffMin} min`;
+  }
+
+  return "Aberto para palpites";
+}
+
+function colorStops(colors, start, end){
+  if(!colors || colors.length === 0) return "";
+  if(colors.length === 1) return `${colors[0]} ${start}%, ${colors[0]} ${end}%`;
+
+  const step = (end - start) / (colors.length - 1);
+  return colors.map((color, index)=>`${color} ${start + step * index}%`).join(", ");
+}
+
+function countryBar(home, away){
+  const h = getTeamData(home).colors;
+  const a = getTeamData(away).colors;
+
+  return `linear-gradient(
+    90deg,
+    ${colorStops(h, 0, 42)},
+    #ffffff 50%,
+    ${colorStops(a, 58, 100)}
+  )`;
+}
+
+function getMatchResultType(homeScore, awayScore){
+  if(homeScore > awayScore) return "home";
+  if(homeScore < awayScore) return "away";
+  return "draw";
+}
+
+function safeNumberOrNull(value){
+  if(value === "" || value === null || value === undefined) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function downloadTextFile(filename, content, mime="text/plain;charset=utf-8"){
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function toCsvValue(value){
+  if(value === null || value === undefined) return "";
+  const text = typeof value === "object" ? JSON.stringify(value) : String(value);
+  return `"${text.replaceAll('"','""')}"`;
+}
+
+function objectsToCsv(rows){
+  if(!rows.length) return "";
+  const keys = Array.from(new Set(rows.flatMap(row=>Object.keys(row))));
+  const header = keys.map(toCsvValue).join(",");
+  const body = rows.map(row=>keys.map(key=>toCsvValue(row[key])).join(",")).join("\n");
+  return header + "\n" + body;
+}
+
+async function logAdminAction(type, payload = {}){
+  await addDoc(collection(db, COLLECTIONS.adminLogs), {
+    type,
+    payload,
+    adminUserId:currentUser?.id || null,
+    adminEmail:currentUser?.email || null,
+    createdAt:new Date().toISOString(),
+    schemaVersion:SCHEMA_VERSION,
+    appVersion:APP_VERSION
+  });
+}
+
+async function createSnapshot(type, affectedMatches){
+  await addDoc(collection(db, COLLECTIONS.syncSnapshots), {
+    type,
+    matches:affectedMatches,
+    createdAt:new Date().toISOString(),
+    createdBy:currentUser?.email || null,
+    schemaVersion:SCHEMA_VERSION,
+    appVersion:APP_VERSION
+  });
+}
+
+function setAdminMessage(html){
+  const box = document.getElementById("adminMessage");
+  if(box) box.innerHTML = html;
+}
+
+/* ============================================================
+   API ADAPTER MODULAR
+============================================================ */
+
+async function fetchExternalMatches(){
+  if(!API_CONFIG.enabled){
+    throw new Error("API desativada nas configurações.");
+  }
+
+  const response = await fetch(API_CONFIG.matchesEndpoint, {
+    method:"GET",
+    cache:"no-store"
+  });
+
+  if(!response.ok){
+    throw new Error("Falha ao buscar API: " + response.status);
+  }
+
+  const data = await response.json();
+
+  if(Array.isArray(data)){
+    return data;
+  }
+
+  if(Array.isArray(data.matches)){
+    return data.matches;
+  }
+
+  if(Array.isArray(data.data)){
+    return data.data;
+  }
+
+  throw new Error("Formato de API não reconhecido.");
+}
+
+function normalizeApiMatch(raw){
+  const homeRaw =
+    raw.homeTeam ||
+    raw.home_team ||
+    raw.home ||
+    raw.team1 ||
+    raw.localteam ||
+    raw.home_name;
+
+  const awayRaw =
+    raw.awayTeam ||
+    raw.away_team ||
+    raw.away ||
+    raw.team2 ||
+    raw.visitorteam ||
+    raw.away_name;
+
+  const home = findStandardTeamName(homeRaw);
+  const away = findStandardTeamName(awayRaw);
+
+  const homeData = getTeamData(home);
+  const awayData = getTeamData(away);
+
+  const date =
+    raw.date ||
+    raw.datetime ||
+    raw.matchDate ||
+    raw.startTime ||
+    raw.time ||
+    raw.kickoff;
+
+  const normalized = {
+    internalId:null,
+    apiId:String(raw.id || raw.apiId || raw.match_id || raw.fixture_id || ""),
+    source:API_CONFIG.provider,
+    phase:raw.phase || raw.stage || raw.round || "Fase indefinida",
+    group:raw.group || raw.groupName || raw.group_name || "",
+    home,
+    away,
+    homeCode:homeData.flagCode,
+    awayCode:awayData.flagCode,
+    date,
+    stadium:raw.stadium || raw.venue || raw.location || "",
+    city:raw.city || "",
+    country:raw.country || "",
+    status:normalizeApiStatus(raw.status || raw.matchStatus || raw.state),
+    homeScore:safeNumberOrNull(raw.homeScore ?? raw.home_score ?? raw.score1 ?? raw.goals_home),
+    awayScore:safeNumberOrNull(raw.awayScore ?? raw.away_score ?? raw.score2 ?? raw.goals_away),
+    adminOverride:false,
+    validatedByAdmin:false,
+    validationNotice:null,
+    lastApiSyncAt:new Date().toISOString(),
+    updatedAt:new Date().toISOString(),
+    schemaVersion:SCHEMA_VERSION
+  };
+
+  normalized.internalId =
+    raw.internalId ||
+    buildInternalId(normalized);
+
+  return normalized;
+}
+
+function normalizeApiStatus(status){
+  const s = normalizeString(status);
+
+  if(["finished","final","fulltime","ft","completed"].includes(s)) return "finished";
+  if(["live","inprogress","in_progress","playing"].includes(s)) return "live";
+  if(["scheduled","notstarted","not_started","fixture"].includes(s)) return "scheduled";
+
+  return "scheduled";
+}
+
+function validateNormalizedMatch(match){
+  const errors = [];
+
+  if(!match.internalId) errors.push("internalId ausente");
+  if(!match.home) errors.push("mandante ausente");
+  if(!match.away) errors.push("visitante ausente");
+  if(!match.date) errors.push("data ausente");
+  if(!match.status) errors.push("status ausente");
+
+  return {
+    valid:errors.length === 0,
+    errors
+  };
+}
+
+function isCriticalApiChange(existing, incoming){
+  if(!existing) return false;
+
+  if(existing.adminOverride) return true;
+
+  if(existing.status === "finished"){
+    const resultChanged =
+      existing.homeScore !== incoming.homeScore ||
+      existing.awayScore !== incoming.awayScore ||
+      existing.status !== incoming.status;
+
+    if(resultChanged) return true;
+  }
+
+  if(existing.home !== incoming.home || existing.away !== incoming.away) return true;
+  if(existing.group && incoming.group && existing.group !== incoming.group) return true;
+  if(existing.phase && incoming.phase && existing.phase !== incoming.phase) return true;
+
+  return false;
+}
+
+function buildSafeApiUpdate(existing, incoming){
+  if(!existing){
+    return {
+      ...incoming,
+      updatedAt:new Date().toISOString()
+    };
+  }
+
+  const update = {
+    apiId:incoming.apiId || existing.apiId || "",
+    source:incoming.source,
+    lastApiSyncAt:new Date().toISOString(),
+    updatedAt:new Date().toISOString(),
+    schemaVersion:SCHEMA_VERSION
+  };
+
+  if(existing.status !== "finished" && !existing.adminOverride){
+    update.date = incoming.date || existing.date;
+    update.stadium = incoming.stadium || existing.stadium || "";
+    update.city = incoming.city || existing.city || "";
+    update.country = incoming.country || existing.country || "";
+    update.status = incoming.status || existing.status;
+    update.homeScore = incoming.homeScore;
+    update.awayScore = incoming.awayScore;
+  }
+
+  if(!existing.group && incoming.group) update.group = incoming.group;
+  if(!existing.phase && incoming.phase) update.phase = incoming.phase;
+
+  return update;
+}
+
+/* ============================================================
+   LOGIN / SESSÃO
+============================================================ */
 
 window.enterBolao = async function(){
 
@@ -810,8 +1291,8 @@ window.enterBolao = async function(){
   let displayName = displayNameInput.value.trim();
   const message = document.getElementById("loginMessage");
 
-  if(!email){
-    message.innerHTML = `<div class="warning">Digite um e-mail</div>`;
+  if(!email || !email.includes("@")){
+    message.innerHTML = `<div class="warning">Digite um e-mail válido.</div>`;
     return;
   }
 
@@ -819,7 +1300,7 @@ window.enterBolao = async function(){
     displayName = ADMIN_NAME;
   }
 
-  const q = query(collection(db, "users"), where("email", "==", email));
+  const q = query(collection(db, COLLECTIONS.users), where("email", "==", email));
   const querySnapshot = await getDocs(q);
 
   if(querySnapshot.empty){
@@ -831,7 +1312,7 @@ window.enterBolao = async function(){
     }
 
     if(email !== ADMIN_EMAIL && !displayName){
-      message.innerHTML = `<div class="warning">Digite um nome de exibição</div>`;
+      message.innerHTML = `<div class="warning">Digite um nome de exibição.</div>`;
       return;
     }
 
@@ -840,7 +1321,7 @@ window.enterBolao = async function(){
       return;
     }
 
-    const newUserRef = await addDoc(collection(db, "users"), {
+    const newUserRef = await addDoc(collection(db, COLLECTIONS.users), {
       email,
       displayName,
       createdAt:new Date().toISOString(),
@@ -848,7 +1329,9 @@ window.enterBolao = async function(){
       totalPoints:0,
       exactScores:0,
       winnerHits:0,
-      championBonus:0
+      championBonus:0,
+      achievements:[],
+      schemaVersion:SCHEMA_VERSION
     });
 
     currentUser = {
@@ -857,6 +1340,8 @@ window.enterBolao = async function(){
       displayName,
       isAdmin:email === ADMIN_EMAIL
     };
+
+    await logAdminAction("user_created", {userEmail:email, displayName});
 
     localStorage.setItem("bolaoEmail", email);
     openDashboard(displayName);
@@ -867,7 +1352,7 @@ window.enterBolao = async function(){
     const userData = userDoc.data();
 
     if(email === ADMIN_EMAIL && userData.displayName !== ADMIN_NAME){
-      await updateDoc(doc(db, "users", userDoc.id), {
+      await updateDoc(doc(db, COLLECTIONS.users, userDoc.id), {
         displayName:ADMIN_NAME,
         isAdmin:true
       });
@@ -901,7 +1386,8 @@ async function openDashboard(name){
   await loadRanking();
   await loadAchievements();
   loadGroups();
-  await loadPublicView();
+  loadPublicScreen();
+  loadSystemStatus();
 }
 
 window.logout = function(){
@@ -909,146 +1395,59 @@ window.logout = function(){
   location.reload();
 }
 
+window.openPublicMode = async function(){
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+  document.getElementById("welcomeText").innerText = "Ranking público";
+  document.getElementById("adminPanel").style.display = "none";
+
+  await loadMatchesFromFirestore();
+  await loadRanking();
+  loadGroups();
+  loadPublicScreen();
+
+  const publicBtn = Array.from(document.querySelectorAll(".tabBtn")).find(btn=>btn.textContent.includes("Público"));
+  showScreen("publicScreen", publicBtn || document.querySelector(".tabBtn"));
+}
+
 window.showScreen = function(screenId, btn){
   document.querySelectorAll(".screen").forEach(screen=>screen.classList.remove("active"));
   document.querySelectorAll(".tabBtn").forEach(button=>button.classList.remove("active"));
   document.getElementById(screenId).classList.add("active");
-  btn.classList.add("active");
+  if(btn) btn.classList.add("active");
 }
 
-function flagUrl(code){
-  return `https://flagcdn.com/w40/${code}.png`;
+const savedEmail = localStorage.getItem("bolaoEmail");
+
+if(savedEmail){
+  autoLogin(savedEmail);
 }
 
-function formatDate(dateString){
-  if(!dateString) return "-";
-  return new Date(dateString).toLocaleString("pt-BR", {
-    day:"2-digit",
-    month:"2-digit",
-    year:"numeric",
-    hour:"2-digit",
-    minute:"2-digit"
-  });
-}
+async function autoLogin(email){
 
-function dateTimeLocalValue(dateString){
-  if(!dateString) return "";
-  const date = new Date(dateString);
-  const pad = n => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
+  const q = query(collection(db, COLLECTIONS.users), where("email", "==", email));
+  const querySnapshot = await getDocs(q);
 
-function getLockDate(dateString){
-  return new Date(new Date(dateString).getTime() - 60 * 60 * 1000);
-}
+  if(!querySnapshot.empty){
 
-function formatLockDate(dateString){
-  return getLockDate(dateString).toLocaleString("pt-BR", {
-    day:"2-digit",
-    month:"2-digit",
-    year:"numeric",
-    hour:"2-digit",
-    minute:"2-digit"
-  });
-}
+    const userDoc = querySnapshot.docs[0];
+    const userData = userDoc.data();
 
-function isLocked(dateString){
-  return new Date() >= getLockDate(dateString);
-}
+    currentUser = {
+      id:userDoc.id,
+      email:userData.email,
+      displayName:email === ADMIN_EMAIL ? ADMIN_NAME : userData.displayName,
+      isAdmin:email === ADMIN_EMAIL
+    };
 
-function colorStops(colors, start, end){
-  if(!colors || colors.length === 0) return "";
-  if(colors.length === 1) return `${colors[0]} ${start}%, ${colors[0]} ${end}%`;
-
-  const step = (end - start) / (colors.length - 1);
-  return colors.map((color, index)=>`${color} ${start + step * index}%`).join(", ");
-}
-
-function countryBar(home, away){
-  const h = teamColors[home] || ["#111111","#cccccc"];
-  const a = teamColors[away] || ["#cccccc","#111111"];
-
-  return `linear-gradient(
-    90deg,
-    ${colorStops(h, 0, 42)},
-    #ffffff 50%,
-    ${colorStops(a, 58, 100)}
-  )`;
-}
-
-function getMatchResultType(homeScore, awayScore){
-  if(homeScore > awayScore) return "home";
-  if(homeScore < awayScore) return "away";
-  return "draw";
-}
-
-function calculatePredictionPoints(prediction, match){
-  if(match.status !== "finished") return {points:0, exact:false, winner:false};
-
-  if(match.homeScore === null || match.awayScore === null) return {points:0, exact:false, winner:false};
-
-  const exact =
-    prediction.predictedHomeScore === match.homeScore &&
-    prediction.predictedAwayScore === match.awayScore;
-
-  if(exact){
-    return {points:15, exact:true, winner:true};
+    document.getElementById("email").value = email;
+    openDashboard(currentUser.displayName);
   }
-
-  const predictedResult =
-    getMatchResultType(prediction.predictedHomeScore, prediction.predictedAwayScore);
-
-  const officialResult =
-    getMatchResultType(match.homeScore, match.awayScore);
-
-  if(predictedResult === officialResult){
-    return {points:5, exact:false, winner:true};
-  }
-
-  return {points:0, exact:false, winner:false};
 }
 
-function getCurrentChampionBonus(){
-  const now = new Date();
-
-  const firstMatch = new Date("2026-06-11T16:00:00");
-  const groupEnd = new Date("2026-06-27T23:59:59");
-  const round32End = new Date("2026-07-03T23:59:59");
-  const round16End = new Date("2026-07-07T23:59:59");
-  const quarterEnd = new Date("2026-07-11T23:59:59");
-  const semiEnd = new Date("2026-07-15T23:59:59");
-  const finalEnd = new Date("2026-07-19T23:59:59");
-
-  if(now < firstMatch){
-    return {phase:"Antes do primeiro jogo", bonus:100};
-  }
-
-  if(now <= groupEnd){
-    return {phase:"Fase de grupos", bonus:75};
-  }
-
-  if(now <= round32End){
-    return {phase:"16 avos", bonus:60};
-  }
-
-  if(now <= round16End){
-    return {phase:"Oitavas", bonus:45};
-  }
-
-  if(now <= quarterEnd){
-    return {phase:"Quartas", bonus:30};
-  }
-
-  if(now <= semiEnd){
-    return {phase:"Semifinal", bonus:15};
-  }
-
-  if(now <= finalEnd){
-    return {phase:"Final", bonus:5};
-  }
-
-  return {phase:"Encerrado", bonus:0};
-}
+/* ============================================================
+   JOGOS / PALPITES
+============================================================ */
 
 window.importTestMatches = async function(){
 
@@ -1057,591 +1456,47 @@ window.importTestMatches = async function(){
     return;
   }
 
-  const adminMessage = document.getElementById("adminMessage");
-  adminMessage.innerHTML = "Importando jogos...";
+  setAdminMessage("Importando jogos de teste...");
 
-  for(const match of testMatches){
+  for(const match of TEST_MATCHES){
     await setDoc(
-      doc(db, "matches", match.id),
+      doc(db, COLLECTIONS.matches, match.internalId),
       {
         ...match,
-        source:"test",
-        updatedAt:new Date().toISOString()
+        updatedAt:new Date().toISOString(),
+        schemaVersion:SCHEMA_VERSION
       },
       { merge:true }
     );
   }
 
-  adminMessage.innerHTML = `<div class="success">Jogos importados com sucesso.</div>`;
+  await logAdminAction("import_test_matches", {count:TEST_MATCHES.length});
+
+  setAdminMessage(`<div class="success">Jogos importados com sucesso.</div>`);
 
   await loadMatchesFromFirestore();
   loadChampionOptions();
-  await loadAchievements();
   loadGroups();
-  await loadPublicView();
-}
-
-
-function extractApiArray(data){
-  if(Array.isArray(data)) return data;
-  if(Array.isArray(data?.data)) return data.data;
-  if(Array.isArray(data?.games)) return data.games;
-  if(Array.isArray(data?.matches)) return data.matches;
-  if(Array.isArray(data?.results)) return data.results;
-  return [];
-}
-
-function ptTeamName(value){
-  if(!value) return "A definir";
-  if(typeof value === "string") return apiNameToPt[value] || value;
-  const raw = value.name_en || value.name || value.team || value.country || value.title || "A definir";
-  return apiNameToPt[raw] || raw;
-}
-
-function teamCodeFromApi(value){
-  if(!value) return "un";
-  const raw = value.fifa_code || value.code || value.iso2 || value.flagCode || value.country_code || "";
-  const upper = String(raw).toUpperCase();
-  if(apiCodeToFlagcdn[upper]) return apiCodeToFlagcdn[upper];
-  if(String(raw).length === 2) return String(raw).toLowerCase();
-  return "un";
-}
-
-function normalizeApiStatus(value){
-  const status = String(value || "scheduled").toLowerCase();
-  if(status.includes("finish") || status.includes("ended") || status.includes("full")) return "finished";
-  if(status.includes("live") || status.includes("progress") || status.includes("playing")) return "live";
-  return "scheduled";
-}
-
-function normalizeApiDate(game){
-  const raw =
-    game.date ||
-    game.datetime ||
-    game.match_date ||
-    game.matchDate ||
-    game.kickoff ||
-    game.time ||
-    game.start_time ||
-    game.startTime;
-
-  if(!raw) return "2026-06-11T16:00:00";
-
-  const parsed = new Date(raw);
-  if(!Number.isNaN(parsed.getTime())){
-    const pad = n => String(n).padStart(2, "0");
-    return `${parsed.getFullYear()}-${pad(parsed.getMonth()+1)}-${pad(parsed.getDate())}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
-  }
-
-  return String(raw);
-}
-
-function normalizeApiMatch(game, index){
-  const homeObj = game.home_team || game.homeTeam || game.team1 || game.home || game.localteam || game.team_a;
-  const awayObj = game.away_team || game.awayTeam || game.team2 || game.away || game.visitorteam || game.team_b;
-
-  const home = ptTeamName(homeObj);
-  const away = ptTeamName(awayObj);
-
-  const homeScoreRaw = game.home_score ?? game.homeScore ?? game.score1 ?? game.home_goals ?? game.goals_home;
-  const awayScoreRaw = game.away_score ?? game.awayScore ?? game.score2 ?? game.away_goals ?? game.goals_away;
-
-  const homeScore = homeScoreRaw === undefined || homeScoreRaw === null || homeScoreRaw === "" ? null : Number(homeScoreRaw);
-  const awayScore = awayScoreRaw === undefined || awayScoreRaw === null || awayScoreRaw === "" ? null : Number(awayScoreRaw);
-
-  return {
-    id:String(game.id || game._id || game.match_id || game.game_id || `api_${index + 1}`),
-    group:String(game.group || game.group_name || game.groupName || "").replace("Group ", "") || null,
-    phase:game.phase || game.stage || game.round || "Fase de Grupos",
-    home,
-    away,
-    homeCode:teamCodeFromApi(homeObj),
-    awayCode:teamCodeFromApi(awayObj),
-    date:normalizeApiDate(game),
-    stadium:game.stadium?.name || game.stadium_name || game.venue?.name || game.venue || game.location || "",
-    homeScore,
-    awayScore,
-    status:normalizeApiStatus(game.status || game.state || game.match_status),
-    adminOverride:false,
-    source:API_CONFIG.sourceLabel,
-    apiRawUpdatedAt:new Date().toISOString()
-  };
-}
-
-window.syncWorldCupApi = async function(){
-  if(!currentUser || !currentUser.isAdmin){
-    alert("Apenas o ADMIN pode sincronizar a API.");
-    return;
-  }
-
-  const adminMessage = document.getElementById("adminMessage");
-  adminMessage.innerHTML = "Sincronizando API da Copa...";
-
-  try{
-    if(!API_CONFIG.enabled){
-      throw new Error("Integração da API desativada em API_CONFIG.");
-    }
-
-    const response = await fetch(API_CONFIG.gamesUrl, {
-      method:"GET",
-      headers:{ "Accept":"application/json" }
-    });
-
-    if(!response.ok){
-      throw new Error(`Resposta da API: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const games = extractApiArray(data);
-
-    if(games.length === 0){
-      throw new Error("A API respondeu, mas não retornou uma lista de jogos reconhecida.");
-    }
-
-    let imported = 0;
-    let skippedByAdminOverride = 0;
-
-    for(let i = 0; i < games.length; i++){
-      const normalized = normalizeApiMatch(games[i], i);
-      const matchRef = doc(db, "matches", normalized.id);
-      const currentSnap = await getDoc(matchRef);
-
-      if(currentSnap.exists() && currentSnap.data().adminOverride){
-        skippedByAdminOverride++;
-        continue;
-      }
-
-      await setDoc(
-        matchRef,
-        {
-          ...normalized,
-          updatedAt:new Date().toISOString()
-        },
-        { merge:true }
-      );
-
-      imported++;
-    }
-
-    await addDoc(collection(db, "adminLogs"), {
-      adminUserId:currentUser.id,
-      adminEmail:currentUser.email,
-      type:"api_sync",
-      imported,
-      skippedByAdminOverride,
-      createdAt:new Date().toISOString()
-    });
-
-    adminMessage.innerHTML = `<div class="success">API sincronizada. Jogos atualizados: ${imported}. Mantidos por edição manual: ${skippedByAdminOverride}.</div>`;
-
-    await loadMatchesFromFirestore();
-    loadChampionOptions();
-    await recalculateRanking(false);
-    await loadRanking();
-    await loadAchievements();
-    loadGroups();
-    await loadPublicView();
-
-  }catch(error){
-    console.error(error);
-    adminMessage.innerHTML = `<div class="warning">Não foi possível sincronizar a API agora. O sistema continua funcionando com os dados do Firestore/manual. Detalhe: ${error.message}</div>`;
-  }
-}
-
-window.findUserToDelete = async function(){
-  if(!currentUser || !currentUser.isAdmin){
-    alert("Apenas o ADMIN pode apagar cadastros.");
-    return;
-  }
-
-  const email = document.getElementById("deleteUserEmail").value.trim().toLowerCase();
-  const preview = document.getElementById("deleteUserPreview");
-
-  if(!email){
-    preview.innerHTML = `<div class="warning">Digite um e-mail.</div>`;
-    return;
-  }
-
-  if(email === ADMIN_EMAIL){
-    preview.innerHTML = `<div class="warning">O cadastro ADMIN não pode ser apagado por esta tela.</div>`;
-    return;
-  }
-
-  const qUser = query(collection(db, "users"), where("email", "==", email));
-  const snap = await getDocs(qUser);
-
-  if(snap.empty){
-    preview.innerHTML = `<div class="warning">Nenhum cadastro encontrado para este e-mail.</div>`;
-    return;
-  }
-
-  const userDoc = snap.docs[0];
-  const user = userDoc.data();
-
-  preview.innerHTML = `
-    <div class="lastPrediction">
-      <strong>Cadastro encontrado:</strong><br>
-      Nome: ${user.displayName || "Sem nome"}<br>
-      E-mail: ${user.email}<br><br>
-      <button class="dangerBtn" onclick="deleteUserCompletely('${userDoc.id}', '${user.email}')">
-        Apagar cadastro e histórico
-      </button>
-    </div>
-  `;
-}
-
-async function deleteDocsByField(collectionName, fieldName, value){
-  const qDelete = query(collection(db, collectionName), where(fieldName, "==", value));
-  const snap = await getDocs(qDelete);
-
-  for(const item of snap.docs){
-    await deleteDoc(doc(db, collectionName, item.id));
-  }
-
-  return snap.docs.length;
-}
-
-window.deleteUserCompletely = async function(userId, email){
-  if(!currentUser || !currentUser.isAdmin){
-    alert("Apenas o ADMIN pode apagar cadastros.");
-    return;
-  }
-
-  if(email === ADMIN_EMAIL){
-    alert("O cadastro ADMIN não pode ser apagado.");
-    return;
-  }
-
-  const ok = confirm(`Tem certeza que deseja apagar o cadastro ${email} e todo o histórico de palpites? Esta ação não pode ser desfeita.`);
-
-  if(!ok) return;
-
-  const preview = document.getElementById("deleteUserPreview");
-  preview.innerHTML = "Apagando cadastro e histórico...";
-
-  const deletedPredictions = await deleteDocsByField("predictions", "userId", userId);
-  const deletedPredictionHistory = await deleteDocsByField("predictionHistory", "userId", userId);
-  const deletedChampionHistory = await deleteDocsByField("championPredictionHistory", "userId", userId);
-
-  const championRef = doc(db, "championPredictions", userId);
-  const championSnap = await getDoc(championRef);
-  let deletedChampion = 0;
-  if(championSnap.exists()){
-    await deleteDoc(championRef);
-    deletedChampion = 1;
-  }
-
-  await deleteDoc(doc(db, "users", userId));
-
-  await addDoc(collection(db, "adminLogs"), {
-    adminUserId:currentUser.id,
-    adminEmail:currentUser.email,
-    type:"user_delete",
-    deletedUserId:userId,
-    deletedEmail:email,
-    deletedPredictions,
-    deletedPredictionHistory,
-    deletedChampion,
-    deletedChampionHistory,
-    createdAt:new Date().toISOString()
-  });
-
-  preview.innerHTML = `<div class="success">Cadastro apagado com sucesso. Palpites: ${deletedPredictions}. Histórico: ${deletedPredictionHistory}. Histórico campeão: ${deletedChampionHistory}.</div>`;
-
-  document.getElementById("deleteUserEmail").value = "";
-
-  await recalculateRanking(false);
-  await loadRanking();
-  await loadAchievements();
-  await loadPublicView();
-}
-
-
-async function fetchCollectionRows(collectionName){
-  const snap = await getDocs(collection(db, collectionName));
-  return snap.docs.map(item=>({ id:item.id, ...item.data() }));
-}
-
-function flattenValue(value){
-  if(value === null || value === undefined) return "";
-  if(typeof value === "object") return JSON.stringify(value).replaceAll('"','""');
-  return String(value).replaceAll('"','""');
-}
-
-function rowsToCsv(rows){
-  if(!rows || rows.length === 0) return "id
-";
-
-  const headers = Array.from(
-    rows.reduce((set,row)=>{
-      Object.keys(row).forEach(key=>set.add(key));
-      return set;
-    }, new Set())
-  );
-
-  const lines = [headers.join(",")];
-
-  rows.forEach(row=>{
-    lines.push(
-      headers.map(header=>`"${flattenValue(row[header])}"`).join(",")
-    );
-  });
-
-  return lines.join("
-");
-}
-
-function downloadTextFile(filename, content, mime="text/csv;charset=utf-8"){
-  const blob = new Blob([content], { type:mime });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
-
-window.exportBackupCsv = async function(){
-  if(!currentUser || !currentUser.isAdmin){
-    alert("Apenas o ADMIN pode exportar backup.");
-    return;
-  }
-
-  const adminMessage = document.getElementById("adminMessage");
-  adminMessage.innerHTML = "Gerando backup CSV...";
-
-  const collections = [
-    "users",
-    "matches",
-    "predictions",
-    "predictionHistory",
-    "championPredictions",
-    "championPredictionHistory",
-    "adminLogs"
-  ];
-
-  const stamp = new Date().toISOString().slice(0,19).replaceAll(":","-");
-
-  for(const name of collections){
-    const rows = await fetchCollectionRows(name);
-    const csv = rowsToCsv(rows);
-    downloadTextFile(`backup_bolao_${name}_${stamp}.csv`, csv);
-  }
-
-  await addDoc(collection(db, "adminLogs"), {
-    adminUserId:currentUser.id,
-    adminEmail:currentUser.email,
-    type:"backup_csv_export",
-    collections,
-    createdAt:new Date().toISOString()
-  });
-
-  adminMessage.innerHTML = `<div class="success">Backup CSV gerado. Verifique os downloads do navegador.</div>`;
-}
-
-async function getRankingUsers(){
-  const qUsers = query(collection(db, "users"));
-  const querySnapshot = await getDocs(qUsers);
-  let users = [];
-
-  querySnapshot.forEach(docSnap=>{
-    const user = docSnap.data();
-    users.push({
-      id:docSnap.id,
-      displayName:user.displayName || "Sem nome",
-      email:user.email || "",
-      totalPoints:user.totalPoints || 0,
-      exactScores:user.exactScores || 0,
-      winnerHits:user.winnerHits || 0,
-      championBonus:user.championBonus || 0
-    });
-  });
-
-  users.sort((a,b)=>{
-    if(b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-    if(b.exactScores !== a.exactScores) return b.exactScores - a.exactScores;
-    return b.winnerHits - a.winnerHits;
-  });
-
-  return users;
-}
-
-async function loadAchievements(){
-  const box = document.getElementById("achievementsList");
-  if(!box) return;
-
-  const users = await getRankingUsers();
-  const predictions = await fetchCollectionRows("predictions");
-  const championPredictions = await fetchCollectionRows("championPredictions");
-
-  if(users.length === 0){
-    box.innerHTML = "Nenhum participante cadastrado ainda.";
-    return;
-  }
-
-  const byId = Object.fromEntries(users.map(u=>[u.id,u]));
-
-  const exactLeader = [...users].sort((a,b)=>b.exactScores-a.exactScores)[0];
-  const pointsLeader = [...users].sort((a,b)=>b.totalPoints-a.totalPoints)[0];
-
-  const sequenceByUser = {};
-  const phasePoints = {};
-  const earliestGoodPrediction = { user:null, hours:-1, match:null };
-
-  for(const user of users){
-    sequenceByUser[user.id] = { current:0, best:0 };
-    phasePoints[user.id] = {};
-  }
-
-  const predictionsByUser = {};
-  predictions.forEach(pred=>{
-    if(!predictionsByUser[pred.userId]) predictionsByUser[pred.userId] = [];
-    predictionsByUser[pred.userId].push(pred);
-  });
-
-  Object.keys(predictionsByUser).forEach(userId=>{
-    const list = predictionsByUser[userId]
-      .map(pred=>({ pred, match:matchesCache.find(m=>m.id===pred.matchId) }))
-      .filter(item=>item.match && item.match.status === "finished")
-      .sort((a,b)=>new Date(a.match.date)-new Date(b.match.date));
-
-    list.forEach(({pred,match})=>{
-      const result = calculatePredictionPoints(pred, match);
-
-      if(result.points > 0){
-        sequenceByUser[userId].current += 1;
-        sequenceByUser[userId].best = Math.max(sequenceByUser[userId].best, sequenceByUser[userId].current);
-      }else{
-        sequenceByUser[userId].current = 0;
-      }
-
-      const phase = match.phase || "Sem fase";
-      phasePoints[userId][phase] = (phasePoints[userId][phase] || 0) + result.points;
-
-      if(result.points > 0 && pred.updatedAt && match.date){
-        const hours = (new Date(match.date) - new Date(pred.updatedAt)) / 36e5;
-        if(hours > earliestGoodPrediction.hours){
-          earliestGoodPrediction.user = byId[userId];
-          earliestGoodPrediction.hours = hours;
-          earliestGoodPrediction.match = `${match.home} x ${match.away}`;
-        }
-      }
-    });
-  });
-
-  let bestSequence = { user:null, value:0 };
-  Object.entries(sequenceByUser).forEach(([userId,data])=>{
-    if(data.best > bestSequence.value){
-      bestSequence = { user:byId[userId], value:data.best };
-    }
-  });
-
-  let bestPhase = { user:null, phase:null, points:0 };
-  Object.entries(phasePoints).forEach(([userId,phases])=>{
-    Object.entries(phases).forEach(([phase,points])=>{
-      if(points > bestPhase.points){
-        bestPhase = { user:byId[userId], phase, points };
-      }
-    });
-  });
-
-  const championOfficial = null;
-  const championHitters = championOfficial
-    ? championPredictions.filter(item=>item.team === championOfficial).map(item=>item.displayName).join(", ")
-    : "Aguardando campeão oficial";
-
-  box.innerHTML = `
-    <div class="achievementsGrid">
-      <div class="achievementCard">
-        <div class="achievementTitle">🎯 Rei dos Placares Exatos</div>
-        <div class="achievementValue">${exactLeader.displayName}: ${exactLeader.exactScores} placares exatos</div>
-      </div>
-
-      <div class="achievementCard">
-        <div class="achievementTitle">🔥 Maior sequência de acertos</div>
-        <div class="achievementValue">${bestSequence.user ? `${bestSequence.user.displayName}: ${bestSequence.value} jogos` : "Ainda sem sequência"}</div>
-      </div>
-
-      <div class="achievementCard">
-        <div class="achievementTitle">🧠 Melhor palpite antecipado</div>
-        <div class="achievementValue">${earliestGoodPrediction.user ? `${earliestGoodPrediction.user.displayName}: ${Math.round(earliestGoodPrediction.hours)}h antes em ${earliestGoodPrediction.match}` : "Ainda sem dados"}</div>
-      </div>
-
-      <div class="achievementCard">
-        <div class="achievementTitle">🏆 Acertou o campeão</div>
-        <div class="achievementValue">${championHitters}</div>
-      </div>
-
-      <div class="achievementCard">
-        <div class="achievementTitle">⚡ Mais pontos em uma fase</div>
-        <div class="achievementValue">${bestPhase.user ? `${bestPhase.user.displayName}: ${bestPhase.points} pts em ${bestPhase.phase}` : "Ainda sem dados"}</div>
-      </div>
-
-      <div class="achievementCard">
-        <div class="achievementTitle">🥇 Líder atual</div>
-        <div class="achievementValue">${pointsLeader.displayName}: ${pointsLeader.totalPoints} pontos</div>
-      </div>
-    </div>
-  `;
-}
-
-async function loadPublicView(){
-  const box = document.getElementById("publicView");
-  if(!box) return;
-
-  const users = await getRankingUsers();
-  const topUsers = users.slice(0,5);
-  const nextMatches = matchesCache
-    .filter(match=>match.status !== "finished")
-    .sort((a,b)=>new Date(a.date)-new Date(b.date))
-    .slice(0,4);
-  const lastResults = matchesCache
-    .filter(match=>match.status === "finished")
-    .sort((a,b)=>new Date(b.date)-new Date(a.date))
-    .slice(0,4);
-
-  box.innerHTML = `
-    <div class="publicGrid">
-      <div class="miniCard">
-        <strong>🏅 Top 5</strong>
-        ${topUsers.length ? topUsers.map((u,i)=>`${i+1}º ${u.displayName} — ${u.totalPoints} pts`).join("<br>") : "Sem ranking ainda"}
-      </div>
-
-      <div class="miniCard">
-        <strong>⏭️ Próximos jogos</strong>
-        ${nextMatches.length ? nextMatches.map(m=>`${m.home} x ${m.away}<br><small>${formatDate(m.date)}</small>`).join("<hr>") : "Sem próximos jogos"}
-      </div>
-
-      <div class="miniCard">
-        <strong>✅ Últimos resultados</strong>
-        ${lastResults.length ? lastResults.map(m=>`${m.home} ${m.homeScore} x ${m.awayScore} ${m.away}`).join("<br>") : "Sem resultados"}
-      </div>
-
-      <div class="miniCard">
-        <strong>📊 Status</strong>
-        Participantes: ${users.length}<br>
-        Jogos cadastrados: ${matchesCache.length}<br>
-        Atualizado em: ${formatDate(new Date().toISOString())}
-      </div>
-    </div>
-  `;
 }
 
 async function loadMatchesFromFirestore(){
 
-  const q = query(collection(db, "matches"), orderBy("date", "asc"));
+  const q = query(collection(db, COLLECTIONS.matches), orderBy("date", "asc"));
   const querySnapshot = await getDocs(q);
 
   matchesCache = [];
 
   querySnapshot.forEach(docSnap=>{
     matchesCache.push({
-      id:docSnap.id,
+      internalId:docSnap.id,
       ...docSnap.data()
     });
   });
+
+  localStorage.setItem("bolao_matches_cache", JSON.stringify({
+    savedAt:new Date().toISOString(),
+    data:matchesCache
+  }));
 
   await loadMatches();
 }
@@ -1650,7 +1505,7 @@ async function getPrediction(matchId){
   if(!currentUser) return null;
 
   const predictionId = `${currentUser.id}_${matchId}`;
-  const predictionRef = doc(db, "predictions", predictionId);
+  const predictionRef = doc(db, COLLECTIONS.predictions, predictionId);
   const predictionSnap = await getDoc(predictionRef);
 
   if(predictionSnap.exists()){
@@ -1662,11 +1517,20 @@ async function getPrediction(matchId){
 
 window.savePrediction = async function(matchId){
 
-  const match = matchesCache.find(m=>m.id === matchId);
+  const match = matchesCache.find(m=>m.internalId === matchId);
 
   if(!match) return;
 
+  if(!currentUser){
+    alert("Faça login para salvar palpite.");
+    return;
+  }
+
   if(isLocked(match.date)){
+    await logAdminAction("blocked_late_prediction_attempt", {
+      userEmail:currentUser.email,
+      matchId
+    });
     alert("O prazo para registrar palpite deste jogo já encerrou.");
     return;
   }
@@ -1674,10 +1538,10 @@ window.savePrediction = async function(matchId){
   const homeInput = document.getElementById(`home_${matchId}`);
   const awayInput = document.getElementById(`away_${matchId}`);
 
-  const homeScore = Number(homeInput.value);
-  const awayScore = Number(awayInput.value);
+  const homeScore = safeNumberOrNull(homeInput.value);
+  const awayScore = safeNumberOrNull(awayInput.value);
 
-  if(homeInput.value === "" || awayInput.value === "" || homeScore < 0 || awayScore < 0){
+  if(homeScore === null || awayScore === null || homeScore < 0 || awayScore < 0){
     alert("Preencha o placar completo do palpite.");
     return;
   }
@@ -1695,19 +1559,34 @@ window.savePrediction = async function(matchId){
     predictedAwayScore:awayScore,
     updatedAt:new Date().toISOString(),
     matchDate:match.date,
-    lockDate:getLockDate(match.date).toISOString()
+    lockDate:getLockDate(match.date).toISOString(),
+    schemaVersion:SCHEMA_VERSION
   };
 
+  const previousSnap = await getDoc(doc(db, COLLECTIONS.predictions, predictionId));
+  const previous = previousSnap.exists() ? previousSnap.data() : null;
+
+  const isSame =
+    previous &&
+    previous.predictedHomeScore === homeScore &&
+    previous.predictedAwayScore === awayScore;
+
+  if(isSame){
+    alert("Este palpite já estava registrado.");
+    return;
+  }
+
   await setDoc(
-    doc(db, "predictions", predictionId),
+    doc(db, COLLECTIONS.predictions, predictionId),
     predictionData,
     { merge:true }
   );
 
   await addDoc(
-    collection(db, "predictionHistory"),
+    collection(db, COLLECTIONS.predictionHistory),
     {
       ...predictionData,
+      previousPrediction:previous,
       savedAt:new Date().toISOString()
     }
   );
@@ -1718,101 +1597,7 @@ window.savePrediction = async function(matchId){
   await recalculateRanking(false);
   await loadRanking();
   await loadAchievements();
-  await loadPublicView();
-}
-
-window.toggleAdminEdit = function(matchId){
-  const box = document.getElementById(`adminEdit_${matchId}`);
-
-  if(!box) return;
-
-  box.style.display =
-    box.style.display === "block"
-      ? "none"
-      : "block";
-}
-
-window.saveAdminMatch = async function(matchId){
-
-  if(!currentUser || !currentUser.isAdmin){
-    alert("Apenas o ADMIN pode editar jogos.");
-    return;
-  }
-
-  const match = matchesCache.find(m=>m.id === matchId);
-
-  if(!match) return;
-
-  const dateValue = document.getElementById(`adminDate_${matchId}`).value;
-  const stadium = document.getElementById(`adminStadium_${matchId}`).value.trim();
-  const status = document.getElementById(`adminStatus_${matchId}`).value;
-  const homeScoreRaw = document.getElementById(`adminHomeScore_${matchId}`).value;
-  const awayScoreRaw = document.getElementById(`adminAwayScore_${matchId}`).value;
-
-  const homeScore =
-    homeScoreRaw === ""
-      ? null
-      : Number(homeScoreRaw);
-
-  const awayScore =
-    awayScoreRaw === ""
-      ? null
-      : Number(awayScoreRaw);
-
-  if(!dateValue){
-    alert("Preencha a data e hora do jogo.");
-    return;
-  }
-
-  if(homeScore !== null && homeScore < 0){
-    alert("Placar inválido.");
-    return;
-  }
-
-  if(awayScore !== null && awayScore < 0){
-    alert("Placar inválido.");
-    return;
-  }
-
-  const updatedData = {
-    date:dateValue,
-    stadium,
-    status,
-    homeScore,
-    awayScore,
-    adminOverride:true,
-    adminUpdatedAt:new Date().toISOString(),
-    adminUpdatedBy:currentUser.email,
-    updatedAt:new Date().toISOString()
-  };
-
-  await setDoc(
-    doc(db, "matches", matchId),
-    updatedData,
-    { merge:true }
-  );
-
-  await addDoc(
-    collection(db, "adminLogs"),
-    {
-      adminUserId:currentUser.id,
-      adminEmail:currentUser.email,
-      type:"match_edit",
-      matchId,
-      previousValue:match,
-      newValue:updatedData,
-      createdAt:new Date().toISOString()
-    }
-  );
-
-  alert("Jogo atualizado com sucesso.");
-
-  await loadMatchesFromFirestore();
-  await recalculateRanking(false);
-  await loadRanking();
-  await loadAchievements();
-  loadGroups();
-  await loadPublicView();
+  loadPublicScreen();
 }
 
 async function loadMatches(){
@@ -1834,7 +1619,8 @@ async function loadMatches(){
   for(const match of matchesCache){
 
     const locked = isLocked(match.date);
-    const prediction = await getPrediction(match.id);
+    const prediction = await getPrediction(match.internalId);
+    const predictionStatus = getPredictionWindowStatus(match);
 
     const resultText =
       match.homeScore === null || match.awayScore === null
@@ -1845,6 +1631,11 @@ async function loadMatches(){
       prediction
         ? `${match.home} ${prediction.predictedHomeScore} x ${prediction.predictedAwayScore} ${match.away}<br><small>Registrado em: ${formatDate(prediction.updatedAt)}</small>`
         : "Não há palpite registrado";
+
+    const statusClass =
+      match.status === "finished" ? "green" :
+      match.status === "live" ? "red" :
+      locked ? "yellow" : "blue";
 
     html += `
       <div class="match">
@@ -1870,36 +1661,38 @@ async function loadMatches(){
         <div class="matchMeta">
           <strong>${match.phase}</strong> · Grupo ${match.group || "-"}<br>
           <strong>Data:</strong> ${formatDate(match.date)}<br>
-          <strong>Local:</strong> ${match.stadium || "-"}<br>
+          <strong>Local:</strong> ${match.stadium || "-"} ${match.city ? "· " + match.city : ""}<br>
           <strong>Data / hora limite para registro do palpite:</strong> ${formatLockDate(match.date)}<br>
-          <strong>Status:</strong> ${match.status || "scheduled"}<br>
+          <span class="statusPill ${statusClass}">${match.status || "scheduled"}</span>
+          <span class="statusPill">${predictionStatus}</span><br>
           <strong>${resultText}</strong>
         </div>
 
         ${match.adminOverride ? `<div class="adminNotice">Dado inserido pelo administrador</div>` : ""}
+        ${match.validatedByAdmin ? `<div class="validatedNotice">Alteração validada pelo administrador</div>` : ""}
 
         <div class="scoreInputs">
           <input
-            id="home_${match.id}"
+            id="home_${match.internalId}"
             type="number"
             min="0"
             value="${prediction ? prediction.predictedHomeScore : ""}"
-            ${locked ? "disabled" : ""}
+            ${locked || !currentUser ? "disabled" : ""}
           >
 
           <strong>x</strong>
 
           <input
-            id="away_${match.id}"
+            id="away_${match.internalId}"
             type="number"
             min="0"
             value="${prediction ? prediction.predictedAwayScore : ""}"
-            ${locked ? "disabled" : ""}
+            ${locked || !currentUser ? "disabled" : ""}
           >
         </div>
 
-        <button onclick="savePrediction('${match.id}')" ${locked ? "disabled" : ""}>
-          ${locked ? "Palpite encerrado" : "Salvar Palpite"}
+        <button onclick="savePrediction('${match.internalId}')" ${locked || !currentUser ? "disabled" : ""}>
+          ${!currentUser ? "Faça login para palpitar" : locked ? "Palpite encerrado" : "Salvar Palpite"}
         </button>
 
         <div class="lastPrediction">
@@ -1909,79 +1702,7 @@ async function loadMatches(){
 
         ${
           currentUser && currentUser.isAdmin
-          ? `
-            <button class="adminBtn" onclick="toggleAdminEdit('${match.id}')">
-              Editar jogo
-            </button>
-
-            <div class="adminEditBox" id="adminEdit_${match.id}">
-              <h3>Editar jogo</h3>
-
-              <div class="adminEditGrid">
-                <div class="full">
-                  <label>Data e hora</label>
-                  <input
-                    id="adminDate_${match.id}"
-                    type="datetime-local"
-                    value="${dateTimeLocalValue(match.date)}"
-                  >
-                </div>
-
-                <div class="full">
-                  <label>Estádio / local</label>
-                  <input
-                    id="adminStadium_${match.id}"
-                    type="text"
-                    value="${match.stadium || ""}"
-                  >
-                </div>
-
-                <div>
-                  <label>Status</label>
-                  <select id="adminStatus_${match.id}">
-                    <option value="scheduled" ${match.status === "scheduled" ? "selected" : ""}>scheduled</option>
-                    <option value="live" ${match.status === "live" ? "selected" : ""}>live</option>
-                    <option value="finished" ${match.status === "finished" ? "selected" : ""}>finished</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label>Grupo</label>
-                  <input
-                    type="text"
-                    value="${match.group || "-"}"
-                    disabled
-                  >
-                </div>
-
-                <div>
-                  <label>Gols ${match.home}</label>
-                  <input
-                    id="adminHomeScore_${match.id}"
-                    type="number"
-                    min="0"
-                    value="${match.homeScore === null || match.homeScore === undefined ? "" : match.homeScore}"
-                  >
-                </div>
-
-                <div>
-                  <label>Gols ${match.away}</label>
-                  <input
-                    id="adminAwayScore_${match.id}"
-                    type="number"
-                    min="0"
-                    value="${match.awayScore === null || match.awayScore === undefined ? "" : match.awayScore}"
-                  >
-                </div>
-
-                <div class="full">
-                  <button class="saveAdminBtn" onclick="saveAdminMatch('${match.id}')">
-                    Salvar edição do jogo
-                  </button>
-                </div>
-              </div>
-            </div>
-          `
+          ? renderAdminEditBox(match)
           : ""
         }
 
@@ -1992,6 +1713,445 @@ async function loadMatches(){
   html += `</div>`;
 
   matchesDiv.innerHTML = html;
+}
+
+function renderAdminEditBox(match){
+  return `
+    <button class="adminBtn" onclick="toggleAdminEdit('${match.internalId}')">
+      Editar jogo
+    </button>
+
+    <div class="adminEditBox" id="adminEdit_${match.internalId}">
+      <h3>Editar jogo</h3>
+
+      <div class="adminEditGrid">
+        <div class="full">
+          <label>Data e hora</label>
+          <input
+            id="adminDate_${match.internalId}"
+            type="datetime-local"
+            value="${dateTimeLocalValue(match.date)}"
+          >
+        </div>
+
+        <div class="full">
+          <label>Estádio / local</label>
+          <input
+            id="adminStadium_${match.internalId}"
+            type="text"
+            value="${match.stadium || ""}"
+          >
+        </div>
+
+        <div>
+          <label>Cidade</label>
+          <input
+            id="adminCity_${match.internalId}"
+            type="text"
+            value="${match.city || ""}"
+          >
+        </div>
+
+        <div>
+          <label>País</label>
+          <input
+            id="adminCountry_${match.internalId}"
+            type="text"
+            value="${match.country || ""}"
+          >
+        </div>
+
+        <div>
+          <label>Status</label>
+          <select id="adminStatus_${match.internalId}">
+            <option value="scheduled" ${match.status === "scheduled" ? "selected" : ""}>scheduled</option>
+            <option value="live" ${match.status === "live" ? "selected" : ""}>live</option>
+            <option value="finished" ${match.status === "finished" ? "selected" : ""}>finished</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Grupo</label>
+          <input
+            id="adminGroup_${match.internalId}"
+            type="text"
+            value="${match.group || ""}"
+          >
+        </div>
+
+        <div>
+          <label>Fase</label>
+          <input
+            id="adminPhase_${match.internalId}"
+            type="text"
+            value="${match.phase || ""}"
+          >
+        </div>
+
+        <div>
+          <label>Gols ${match.home}</label>
+          <input
+            id="adminHomeScore_${match.internalId}"
+            type="number"
+            min="0"
+            value="${match.homeScore === null || match.homeScore === undefined ? "" : match.homeScore}"
+          >
+        </div>
+
+        <div>
+          <label>Gols ${match.away}</label>
+          <input
+            id="adminAwayScore_${match.internalId}"
+            type="number"
+            min="0"
+            value="${match.awayScore === null || match.awayScore === undefined ? "" : match.awayScore}"
+          >
+        </div>
+
+        <div class="full">
+          <button class="saveAdminBtn" onclick="saveAdminMatch('${match.internalId}')">
+            Salvar edição do jogo
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+window.toggleAdminEdit = function(matchId){
+  const box = document.getElementById(`adminEdit_${matchId}`);
+
+  if(!box) return;
+
+  box.style.display =
+    box.style.display === "block"
+      ? "none"
+      : "block";
+}
+
+window.saveAdminMatch = async function(matchId){
+
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode editar jogos.");
+    return;
+  }
+
+  const match = matchesCache.find(m=>m.internalId === matchId);
+
+  if(!match) return;
+
+  await createSnapshot("admin_match_edit", [match]);
+
+  const dateValue = document.getElementById(`adminDate_${matchId}`).value;
+  const stadium = document.getElementById(`adminStadium_${matchId}`).value.trim();
+  const city = document.getElementById(`adminCity_${matchId}`).value.trim();
+  const country = document.getElementById(`adminCountry_${matchId}`).value.trim();
+  const status = document.getElementById(`adminStatus_${matchId}`).value;
+  const group = document.getElementById(`adminGroup_${matchId}`).value.trim();
+  const phase = document.getElementById(`adminPhase_${matchId}`).value.trim();
+  const homeScore = safeNumberOrNull(document.getElementById(`adminHomeScore_${matchId}`).value);
+  const awayScore = safeNumberOrNull(document.getElementById(`adminAwayScore_${matchId}`).value);
+
+  if(!dateValue){
+    alert("Preencha a data e hora do jogo.");
+    return;
+  }
+
+  if(status === "finished" && (homeScore === null || awayScore === null)){
+    alert("Jogo finalizado precisa ter placar completo.");
+    return;
+  }
+
+  const updatedData = {
+    date:dateValue,
+    stadium,
+    city,
+    country,
+    status,
+    group,
+    phase,
+    homeScore,
+    awayScore,
+    adminOverride:true,
+    validatedByAdmin:false,
+    validationNotice:"Dado inserido pelo administrador",
+    adminUpdatedAt:new Date().toISOString(),
+    adminUpdatedBy:currentUser.email,
+    updatedAt:new Date().toISOString(),
+    schemaVersion:SCHEMA_VERSION
+  };
+
+  await setDoc(
+    doc(db, COLLECTIONS.matches, matchId),
+    updatedData,
+    { merge:true }
+  );
+
+  await logAdminAction("match_edit", {
+    matchId,
+    previousValue:match,
+    newValue:updatedData
+  });
+
+  alert("Jogo atualizado com sucesso.");
+
+  await loadMatchesFromFirestore();
+  await recalculateRanking(false);
+  await loadRanking();
+  await loadAchievements();
+  loadGroups();
+  loadPublicScreen();
+}
+
+/* ============================================================
+   API SYNC / FILA DE REVISÃO
+============================================================ */
+
+window.syncApiMatches = async function(){
+
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode sincronizar a API.");
+    return;
+  }
+
+  setAdminMessage("Sincronizando API...");
+
+  try{
+    const external = await fetchExternalMatches();
+    const normalized = external.map(normalizeApiMatch);
+    const validMatches = [];
+    const invalidMatches = [];
+
+    normalized.forEach(match=>{
+      const validation = validateNormalizedMatch(match);
+      if(validation.valid) validMatches.push(match);
+      else invalidMatches.push({match, errors:validation.errors});
+    });
+
+    const affectedSnapshot = [];
+    let created = 0;
+    let updated = 0;
+    let queued = 0;
+
+    for(const incoming of validMatches){
+      const ref = doc(db, COLLECTIONS.matches, incoming.internalId);
+      const snap = await getDoc(ref);
+      const existing = snap.exists() ? {internalId:snap.id, ...snap.data()} : null;
+
+      if(existing) affectedSnapshot.push(existing);
+
+      if(!existing){
+        await setDoc(ref, incoming, {merge:true});
+        created++;
+        continue;
+      }
+
+      if(isCriticalApiChange(existing, incoming)){
+        await addDoc(collection(db, COLLECTIONS.apiReviewQueue), {
+          matchId:incoming.internalId,
+          apiId:incoming.apiId,
+          source:incoming.source,
+          status:"pending",
+          conflictType:"critical_change",
+          currentValue:existing,
+          proposedValue:incoming,
+          detectedAt:new Date().toISOString(),
+          schemaVersion:SCHEMA_VERSION
+        });
+        queued++;
+        continue;
+      }
+
+      const safeUpdate = buildSafeApiUpdate(existing, incoming);
+      await setDoc(ref, safeUpdate, {merge:true});
+      updated++;
+    }
+
+    if(affectedSnapshot.length){
+      await createSnapshot("api_sync", affectedSnapshot);
+    }
+
+    apiStatus = {
+      online:true,
+      lastSyncAt:new Date().toISOString(),
+      message:`${created} novos jogos, ${updated} atualizados, ${queued} pendências.`
+    };
+
+    await setDoc(doc(db, COLLECTIONS.systemStatus, "api"), {
+      ...apiStatus,
+      provider:API_CONFIG.provider,
+      appVersion:APP_VERSION,
+      updatedAt:new Date().toISOString()
+    }, {merge:true});
+
+    await logAdminAction("api_sync", {
+      created,
+      updated,
+      queued,
+      invalid:invalidMatches.length
+    });
+
+    setAdminMessage(`<div class="success">${apiStatus.message}</div>`);
+
+    await loadMatchesFromFirestore();
+    await loadApiReviewQueue();
+    loadSystemStatus();
+
+  }catch(error){
+    apiStatus = {
+      online:false,
+      lastSyncAt:apiStatus.lastSyncAt,
+      message:error.message
+    };
+
+    await setDoc(doc(db, COLLECTIONS.systemStatus, "api"), {
+      ...apiStatus,
+      provider:API_CONFIG.provider,
+      appVersion:APP_VERSION,
+      updatedAt:new Date().toISOString()
+    }, {merge:true});
+
+    setAdminMessage(`<div class="warning">Falha na API: ${error.message}. O bolão segue funcionando pelo Firestore/manual.</div>`);
+  }
+}
+
+window.loadApiReviewQueue = async function(){
+
+  if(!currentUser || !currentUser.isAdmin) return;
+
+  const box = document.getElementById("apiReviewQueueBox");
+
+  const q = query(
+    collection(db, COLLECTIONS.apiReviewQueue),
+    where("status", "==", "pending")
+  );
+
+  const snap = await getDocs(q);
+
+  if(snap.empty){
+    box.innerHTML = "Nenhuma pendência da API.";
+    return;
+  }
+
+  let html = "";
+
+  snap.forEach(docSnap=>{
+    const item = docSnap.data();
+    const current = item.currentValue || {};
+    const proposed = item.proposedValue || {};
+
+    html += `
+      <div class="lastPrediction">
+        <strong>${current.home || proposed.home} x ${current.away || proposed.away}</strong><br>
+        Tipo: ${item.conflictType}<br>
+        Atual: ${current.homeScore ?? "-"} x ${current.awayScore ?? "-"} · ${current.status || "-"}<br>
+        API: ${proposed.homeScore ?? "-"} x ${proposed.awayScore ?? "-"} · ${proposed.status || "-"}<br>
+        Detectado em: ${formatDate(item.detectedAt)}<br>
+        <button class="saveAdminBtn" onclick="approveApiReview('${docSnap.id}')">Aprovar</button>
+        <button class="dangerBtn" onclick="ignoreApiReview('${docSnap.id}')">Ignorar</button>
+      </div>
+    `;
+  });
+
+  box.innerHTML = html;
+}
+
+window.approveApiReview = async function(reviewId){
+
+  if(!currentUser || !currentUser.isAdmin) return;
+
+  const ref = doc(db, COLLECTIONS.apiReviewQueue, reviewId);
+  const snap = await getDoc(ref);
+
+  if(!snap.exists()) return;
+
+  const item = snap.data();
+  const proposed = item.proposedValue;
+
+  await createSnapshot("api_review_approval", [item.currentValue]);
+
+  await setDoc(doc(db, COLLECTIONS.matches, item.matchId), {
+    ...proposed,
+    validatedByAdmin:true,
+    adminOverride:false,
+    validationNotice:"Alteração validada pelo administrador",
+    validatedAt:new Date().toISOString(),
+    validatedBy:currentUser.email,
+    updatedAt:new Date().toISOString()
+  }, {merge:true});
+
+  await setDoc(ref, {
+    status:"approved",
+    reviewedAt:new Date().toISOString(),
+    reviewedBy:currentUser.email
+  }, {merge:true});
+
+  await logAdminAction("api_review_approved", {
+    reviewId,
+    matchId:item.matchId,
+    currentValue:item.currentValue,
+    proposedValue:item.proposedValue
+  });
+
+  await loadMatchesFromFirestore();
+  await recalculateRanking(false);
+  await loadRanking();
+  await loadApiReviewQueue();
+  loadGroups();
+  loadPublicScreen();
+
+  alert("Alteração da API aprovada.");
+}
+
+window.ignoreApiReview = async function(reviewId){
+
+  if(!currentUser || !currentUser.isAdmin) return;
+
+  const ref = doc(db, COLLECTIONS.apiReviewQueue, reviewId);
+  const snap = await getDoc(ref);
+
+  if(!snap.exists()) return;
+
+  await setDoc(ref, {
+    status:"ignored",
+    reviewedAt:new Date().toISOString(),
+    reviewedBy:currentUser.email
+  }, {merge:true});
+
+  await logAdminAction("api_review_ignored", {
+    reviewId,
+    item:snap.data()
+  });
+
+  await loadApiReviewQueue();
+
+  alert("Pendência ignorada.");
+}
+
+/* ============================================================
+   CAMPEÃO
+============================================================ */
+
+function getCurrentChampionBonus(){
+  const now = new Date();
+
+  const firstMatch = new Date("2026-06-11T16:00:00");
+  const groupEnd = new Date("2026-06-27T23:59:59");
+  const round32End = new Date("2026-07-03T23:59:59");
+  const round16End = new Date("2026-07-07T23:59:59");
+  const quarterEnd = new Date("2026-07-11T23:59:59");
+  const semiEnd = new Date("2026-07-15T23:59:59");
+  const finalEnd = new Date("2026-07-19T23:59:59");
+
+  if(now < firstMatch) return {phase:"Antes do primeiro jogo", bonus:100};
+  if(now <= groupEnd) return {phase:"Fase de grupos", bonus:75};
+  if(now <= round32End) return {phase:"16 avos", bonus:60};
+  if(now <= round16End) return {phase:"Oitavas", bonus:45};
+  if(now <= quarterEnd) return {phase:"Quartas", bonus:30};
+  if(now <= semiEnd) return {phase:"Semifinal", bonus:15};
+  if(now <= finalEnd) return {phase:"Final", bonus:5};
+
+  return {phase:"Encerrado", bonus:0};
 }
 
 function loadChampionOptions(){
@@ -2023,7 +2183,7 @@ async function loadLastChampionPrediction(){
     return;
   }
 
-  const ref = doc(db, "championPredictions", currentUser.id);
+  const ref = doc(db, COLLECTIONS.championPredictions, currentUser.id);
   const snap = await getDoc(ref);
 
   if(!snap.exists()){
@@ -2061,7 +2221,7 @@ window.saveChampionPrediction = async function(){
     return;
   }
 
-  const ref = doc(db, "championPredictions", currentUser.id);
+  const ref = doc(db, COLLECTIONS.championPredictions, currentUser.id);
   const snap = await getDoc(ref);
 
   if(snap.exists() && snap.data().team === team){
@@ -2077,12 +2237,13 @@ window.saveChampionPrediction = async function(){
     team,
     phaseWhenSaved:current.phase,
     bonusPointsIfCorrect:current.bonus,
-    updatedAt:new Date().toISOString()
+    updatedAt:new Date().toISOString(),
+    schemaVersion:SCHEMA_VERSION
   };
 
   await setDoc(ref, data, { merge:true });
 
-  await addDoc(collection(db, "championPredictionHistory"), {
+  await addDoc(collection(db, COLLECTIONS.championPredictionHistory), {
     ...data,
     savedAt:new Date().toISOString()
   });
@@ -2092,42 +2253,68 @@ window.saveChampionPrediction = async function(){
   await loadLastChampionPrediction();
 }
 
+/* ============================================================
+   RANKING / CONQUISTAS
+============================================================ */
+
+function calculatePredictionPoints(prediction, match){
+  if(match.status !== "finished") return {points:0, exact:false, winner:false};
+
+  if(match.homeScore === null || match.awayScore === null) return {points:0, exact:false, winner:false};
+
+  const exact =
+    prediction.predictedHomeScore === match.homeScore &&
+    prediction.predictedAwayScore === match.awayScore;
+
+  if(exact){
+    return {points:15, exact:true, winner:true};
+  }
+
+  const predictedResult =
+    getMatchResultType(prediction.predictedHomeScore, prediction.predictedAwayScore);
+
+  const officialResult =
+    getMatchResultType(match.homeScore, match.awayScore);
+
+  if(predictedResult === officialResult){
+    return {points:5, exact:false, winner:true};
+  }
+
+  return {points:0, exact:false, winner:false};
+}
+
 window.recalculateRanking = async function(showAlert = true){
 
-  const usersSnap = await getDocs(collection(db, "users"));
-  const predictionsSnap = await getDocs(collection(db, "predictions"));
-  const championSnap = await getDocs(collection(db, "championPredictions"));
+  const usersSnap = await getDocs(collection(db, COLLECTIONS.users));
+  const predictionsSnap = await getDocs(collection(db, COLLECTIONS.predictions));
+  const championSnap = await getDocs(collection(db, COLLECTIONS.championPredictions));
 
   const userStats = {};
 
   usersSnap.forEach(userDoc=>{
-    const user = userDoc.data();
-
     userStats[userDoc.id] = {
       totalPoints:0,
       exactScores:0,
       winnerHits:0,
-      championBonus:0
+      championBonus:0,
+      predictionsCount:0,
+      achievements:[]
     };
   });
 
   predictionsSnap.forEach(predDoc=>{
     const prediction = predDoc.data();
-    const match = matchesCache.find(m=>m.id === prediction.matchId);
+    const match = matchesCache.find(m=>m.internalId === prediction.matchId);
 
     if(!match || !userStats[prediction.userId]) return;
 
     const result = calculatePredictionPoints(prediction, match);
 
     userStats[prediction.userId].totalPoints += result.points;
+    userStats[prediction.userId].predictionsCount += 1;
 
-    if(result.exact){
-      userStats[prediction.userId].exactScores += 1;
-    }
-
-    if(result.winner){
-      userStats[prediction.userId].winnerHits += 1;
-    }
+    if(result.exact) userStats[prediction.userId].exactScores += 1;
+    if(result.winner) userStats[prediction.userId].winnerHits += 1;
   });
 
   championSnap.forEach(champDoc=>{
@@ -2141,24 +2328,68 @@ window.recalculateRanking = async function(showAlert = true){
     }
   });
 
+  Object.entries(userStats).forEach(([userId, stats])=>{
+    const achievements = [];
+
+    if(stats.exactScores >= 1) achievements.push("🎯 Acertou placar exato");
+    if(stats.exactScores >= 3) achievements.push("🎯 Rei dos Placares Exatos");
+    if(stats.winnerHits >= 5) achievements.push("🔥 Sequência de bons palpites");
+    if(stats.championBonus > 0) achievements.push("🏆 Acertou o campeão");
+    if(stats.totalPoints >= 50) achievements.push("⚡ Alta pontuação acumulada");
+
+    stats.achievements = achievements;
+  });
+
   for(const userId of Object.keys(userStats)){
     await setDoc(
-      doc(db, "users", userId),
+      doc(db, COLLECTIONS.users, userId),
       userStats[userId],
       { merge:true }
     );
   }
 
+  await logAdminAction("ranking_recalculated", {
+    showAlert,
+    users:Object.keys(userStats).length
+  });
+
   if(showAlert){
     alert("Ranking recalculado.");
     await loadRanking();
+    await loadAchievements();
   }
 }
 
 async function loadRanking(){
 
   const rankingDiv = document.getElementById("rankingList");
-  let users = await getRankingUsers();
+  const q = query(collection(db, COLLECTIONS.users));
+  const querySnapshot = await getDocs(q);
+
+  let users = [];
+
+  querySnapshot.forEach(doc=>{
+    const user = doc.data();
+
+    users.push({
+      id:doc.id,
+      displayName:user.displayName || "Sem nome",
+      totalPoints:user.totalPoints || 0,
+      exactScores:user.exactScores || 0,
+      winnerHits:user.winnerHits || 0,
+      championBonus:user.championBonus || 0,
+      predictionsCount:user.predictionsCount || 0,
+      achievements:user.achievements || []
+    });
+  });
+
+  users.sort((a,b)=>{
+    if(b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+    if(b.exactScores !== a.exactScores) return b.exactScores - a.exactScores;
+    return b.winnerHits - a.winnerHits;
+  });
+
+  rankingCache = users;
 
   if(users.length === 0){
     rankingDiv.innerHTML = "Nenhum participante cadastrado ainda.";
@@ -2190,6 +2421,31 @@ async function loadRanking(){
 
   rankingDiv.innerHTML = html;
 }
+
+async function loadAchievements(){
+  const box = document.getElementById("achievementsList");
+
+  if(!box) return;
+
+  if(!rankingCache.length){
+    box.innerHTML = "Sem conquistas ainda.";
+    return;
+  }
+
+  const exactLeader = [...rankingCache].sort((a,b)=>b.exactScores-a.exactScores)[0];
+  const pointsLeader = rankingCache[0];
+  const mostPredictions = [...rankingCache].sort((a,b)=>b.predictionsCount-a.predictionsCount)[0];
+
+  box.innerHTML = `
+    <div class="lastPrediction"><strong>🎯 Rei dos Placares Exatos</strong><br>${exactLeader?.displayName || "-"} · ${exactLeader?.exactScores || 0} exatos</div>
+    <div class="lastPrediction"><strong>⚡ Maior pontuação</strong><br>${pointsLeader?.displayName || "-"} · ${pointsLeader?.totalPoints || 0} pts</div>
+    <div class="lastPrediction"><strong>🧠 Mais participativo</strong><br>${mostPredictions?.displayName || "-"} · ${mostPredictions?.predictionsCount || 0} palpites</div>
+  `;
+}
+
+/* ============================================================
+   GRUPOS / PÚBLICO
+============================================================ */
 
 function loadGroups(){
 
@@ -2314,33 +2570,269 @@ function loadGroups(){
   groupsDiv.innerHTML = html;
 }
 
-const savedEmail = localStorage.getItem("bolaoEmail");
+function loadPublicScreen(){
+  const rankingBox = document.getElementById("publicRankingList");
+  const nextBox = document.getElementById("publicNextMatches");
+  const resultsBox = document.getElementById("publicLastResults");
 
-if(savedEmail){
-  autoLogin(savedEmail);
-}
+  if(rankingBox){
+    rankingBox.innerHTML = rankingCache.slice(0,10).map((user,index)=>`
+      <div class="rankingItem">
+        <div><strong>${index+1}º - ${user.displayName}</strong></div>
+        <div>${user.totalPoints} pts</div>
+      </div>
+    `).join("") || "Ranking ainda não disponível.";
+  }
 
-async function autoLogin(email){
+  const now = new Date();
 
-  const q = query(collection(db, "users"), where("email", "==", email));
-  const querySnapshot = await getDocs(q);
+  const nextMatches = matchesCache
+    .filter(m=>new Date(m.date) > now)
+    .slice(0,5);
 
-  if(!querySnapshot.empty){
+  const lastResults = matchesCache
+    .filter(m=>m.status === "finished")
+    .slice(-5)
+    .reverse();
 
-    const userDoc = querySnapshot.docs[0];
-    const userData = userDoc.data();
+  if(nextBox){
+    nextBox.innerHTML = nextMatches.map(m=>`
+      <div class="lastPrediction">
+        <strong>${m.home} x ${m.away}</strong><br>
+        ${formatDate(m.date)} · ${m.stadium || "-"}
+      </div>
+    `).join("") || "Sem próximos jogos cadastrados.";
+  }
 
-    currentUser = {
-      id:userDoc.id,
-      email:userData.email,
-      displayName:email === ADMIN_EMAIL ? ADMIN_NAME : userData.displayName,
-      isAdmin:email === ADMIN_EMAIL
-    };
-
-    document.getElementById("email").value = email;
-    openDashboard(currentUser.displayName);
+  if(resultsBox){
+    resultsBox.innerHTML = lastResults.map(m=>`
+      <div class="lastPrediction">
+        <strong>${m.home} ${m.homeScore} x ${m.awayScore} ${m.away}</strong><br>
+        ${m.phase || "-"} · ${formatDate(m.date)}
+      </div>
+    `).join("") || "Sem resultados cadastrados.";
   }
 }
+
+/* ============================================================
+   ADMIN / BACKUP / EXCLUSÃO / ROLLBACK / STATUS
+============================================================ */
+
+window.exportBackupCsv = async function(){
+
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode exportar backup.");
+    return;
+  }
+
+  const collections = [
+    COLLECTIONS.users,
+    COLLECTIONS.matches,
+    COLLECTIONS.predictions,
+    COLLECTIONS.predictionHistory,
+    COLLECTIONS.championPredictions,
+    COLLECTIONS.championPredictionHistory,
+    COLLECTIONS.adminLogs,
+    COLLECTIONS.apiReviewQueue
+  ];
+
+  const now = new Date().toISOString().slice(0,19).replaceAll(":","-");
+  let combined = "";
+
+  for(const collectionName of collections){
+    const snap = await getDocs(collection(db, collectionName));
+    const rows = [];
+    snap.forEach(docSnap=>rows.push({id:docSnap.id, ...docSnap.data()}));
+
+    combined += `\n\n### ${collectionName}\n`;
+    combined += objectsToCsv(rows);
+  }
+
+  downloadTextFile(`backup_bolao_copa_2026_${now}.csv`, combined, "text/csv;charset=utf-8");
+
+  await logAdminAction("backup_exported", {
+    collections,
+    exportedAt:new Date().toISOString()
+  });
+
+  alert("Backup exportado.");
+}
+
+window.deleteUserByEmail = async function(){
+
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode apagar usuários.");
+    return;
+  }
+
+  const email = document.getElementById("deleteUserEmail").value.trim().toLowerCase();
+
+  if(!email){
+    alert("Informe o e-mail.");
+    return;
+  }
+
+  if(email === ADMIN_EMAIL){
+    alert("O ADMIN não pode ser excluído.");
+    return;
+  }
+
+  const usersQ = query(collection(db, COLLECTIONS.users), where("email", "==", email));
+  const usersSnap = await getDocs(usersQ);
+
+  if(usersSnap.empty){
+    alert("Usuário não encontrado.");
+    return;
+  }
+
+  const userDoc = usersSnap.docs[0];
+  const userId = userDoc.id;
+  const userData = userDoc.data();
+
+  const confirmText = prompt(`Digite APAGAR para excluir ${userData.displayName} (${email}) e todo o histórico de palpites.`);
+
+  if(confirmText !== "APAGAR"){
+    alert("Exclusão cancelada.");
+    return;
+  }
+
+  const deletedSummary = {
+    user:userData,
+    predictions:0,
+    predictionHistory:0,
+    championPrediction:false,
+    championHistory:0
+  };
+
+  const predictionsQ = query(collection(db, COLLECTIONS.predictions), where("userId", "==", userId));
+  const predictionsSnap = await getDocs(predictionsQ);
+  for(const docSnap of predictionsSnap.docs){
+    await deleteDoc(doc(db, COLLECTIONS.predictions, docSnap.id));
+    deletedSummary.predictions++;
+  }
+
+  const historyQ = query(collection(db, COLLECTIONS.predictionHistory), where("userId", "==", userId));
+  const historySnap = await getDocs(historyQ);
+  for(const docSnap of historySnap.docs){
+    await deleteDoc(doc(db, COLLECTIONS.predictionHistory, docSnap.id));
+    deletedSummary.predictionHistory++;
+  }
+
+  const champRef = doc(db, COLLECTIONS.championPredictions, userId);
+  const champSnap = await getDoc(champRef);
+  if(champSnap.exists()){
+    await deleteDoc(champRef);
+    deletedSummary.championPrediction = true;
+  }
+
+  const champHistoryQ = query(collection(db, COLLECTIONS.championPredictionHistory), where("userId", "==", userId));
+  const champHistorySnap = await getDocs(champHistoryQ);
+  for(const docSnap of champHistorySnap.docs){
+    await deleteDoc(doc(db, COLLECTIONS.championPredictionHistory, docSnap.id));
+    deletedSummary.championHistory++;
+  }
+
+  await deleteDoc(doc(db, COLLECTIONS.users, userId));
+
+  await logAdminAction("user_deleted", {
+    deletedEmail:email,
+    deletedUserId:userId,
+    deletedSummary
+  });
+
+  await recalculateRanking(false);
+  await loadRanking();
+  await loadAchievements();
+  loadPublicScreen();
+
+  alert("Cadastro e histórico apagados.");
+}
+
+window.restoreLastSyncSnapshot = async function(){
+
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode restaurar snapshot.");
+    return;
+  }
+
+  const q = query(
+    collection(db, COLLECTIONS.syncSnapshots),
+    orderBy("createdAt", "desc"),
+    limit(1)
+  );
+
+  const snap = await getDocs(q);
+
+  if(snap.empty){
+    alert("Nenhum snapshot encontrado.");
+    return;
+  }
+
+  const snapshotDoc = snap.docs[0];
+  const snapshot = snapshotDoc.data();
+
+  if(!snapshot.matches || !snapshot.matches.length){
+    alert("Snapshot sem jogos para restaurar.");
+    return;
+  }
+
+  const confirmText = prompt("Digite RESTAURAR para restaurar a última sincronização.");
+
+  if(confirmText !== "RESTAURAR"){
+    alert("Restauração cancelada.");
+    return;
+  }
+
+  for(const match of snapshot.matches){
+    await setDoc(doc(db, COLLECTIONS.matches, match.internalId), {
+      ...match,
+      restoredAt:new Date().toISOString(),
+      restoredBy:currentUser.email
+    }, {merge:true});
+  }
+
+  await logAdminAction("snapshot_restored", {
+    snapshotId:snapshotDoc.id,
+    type:snapshot.type,
+    count:snapshot.matches.length
+  });
+
+  await loadMatchesFromFirestore();
+  await recalculateRanking(false);
+  await loadRanking();
+  loadGroups();
+  loadPublicScreen();
+
+  alert("Snapshot restaurado.");
+}
+
+async function loadSystemStatus(){
+  const box = document.getElementById("systemStatusBox");
+  if(!box) return;
+
+  const usersSnap = await getDocs(collection(db, COLLECTIONS.users));
+  const predictionsSnap = await getDocs(collection(db, COLLECTIONS.predictions));
+  const reviewQ = query(collection(db, COLLECTIONS.apiReviewQueue), where("status","==","pending"));
+  const reviewSnap = await getDocs(reviewQ);
+
+  let apiDoc = null;
+  const apiSnap = await getDoc(doc(db, COLLECTIONS.systemStatus, "api"));
+  if(apiSnap.exists()) apiDoc = apiSnap.data();
+
+  box.innerHTML = `
+    <strong>Versão:</strong> ${APP_VERSION}<br>
+    <strong>Usuários:</strong> ${usersSnap.size}<br>
+    <strong>Palpites ativos:</strong> ${predictionsSnap.size}<br>
+    <strong>Pendências API:</strong> ${reviewSnap.size}<br>
+    <strong>API:</strong> ${apiDoc?.online ? "online" : "indisponível/não validada"}<br>
+    <strong>Última sync:</strong> ${apiDoc?.lastSyncAt ? formatDate(apiDoc.lastSyncAt) : "-"}<br>
+    <strong>Mensagem:</strong> ${apiDoc?.message || apiStatus.message}
+  `;
+}
+
+/* ============================================================
+   FIM
+============================================================ */
 
 </script>
 
