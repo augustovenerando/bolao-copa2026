@@ -1,4 +1,5 @@
-'htmml
+'h
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -8,9 +9,7 @@
   <title>Bolão Copa 2026</title>
 
   <style>
-    *{
-      box-sizing:border-box;
-    }
+    *{ box-sizing:border-box; }
 
     :root{
       --red:#e60000;
@@ -34,34 +33,30 @@
       min-height:100vh;
       font-family:Arial, Helvetica, sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(234,255,46,.45), transparent 24%),
-        radial-gradient(circle at top right, rgba(85,240,208,.45), transparent 25%),
-        linear-gradient(135deg, var(--dark-green), var(--navy) 35%, var(--purple) 65%, var(--red));
+        linear-gradient(rgba(0,0,0,.62), rgba(0,0,0,.62)),
+        url("https://s2-ge.glbimg.com/rUwiYSk9pAoPitC1iqWaj-0MW90=/0x0:1081x1081/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_bc8228b6673f488aa253bbcb03c80ec5/internal_photos/bs/2023/r/w/q8AvjjQuqFTdoUo361JA/fwc26-official-emblem-8.jpg");
+      background-size:cover;
+      background-position:center;
+      background-attachment:fixed;
       color:var(--black);
     }
 
     .container{
-      max-width:1100px;
+      max-width:1180px;
       margin:0 auto;
       padding:24px;
     }
 
     .hero{
-      background:
-        repeating-radial-gradient(circle at 50% 20%, var(--red) 0 24px, var(--dark-red) 24px 48px, var(--lilac) 48px 72px, var(--blue) 72px 96px, var(--lime) 96px 120px, var(--cyan) 120px 144px);
+      background:rgba(0,0,0,.82);
+      border:4px solid var(--yellow);
       border-radius:28px;
-      padding:28px;
-      color:white;
-      position:relative;
-      overflow:hidden;
-      box-shadow:0 18px 50px rgba(0,0,0,.35);
+      padding:24px;
       margin-bottom:22px;
+      box-shadow:0 18px 50px rgba(0,0,0,.45);
     }
 
-    .heroOverlay{
-      background:rgba(0,0,0,.62);
-      border-radius:22px;
-      padding:26px;
+    .heroInner{
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -70,51 +65,66 @@
     }
 
     .logo{
-      width:110px;
-      max-width:35vw;
+      width:115px;
       background:white;
-      padding:10px;
       border-radius:18px;
+      padding:8px;
     }
 
-    h1,h2,h3{
-      margin-top:0;
-    }
+    h1,h2,h3{ margin-top:0; }
 
     h1{
-      font-size:34px;
+      color:white;
+      font-size:36px;
       margin-bottom:8px;
-      letter-spacing:-1px;
     }
 
     .subtitle{
+      color:white;
       margin:0;
-      font-size:16px;
       opacity:.9;
     }
 
+    .paletteBar{
+      height:12px;
+      border-radius:999px;
+      margin-top:18px;
+      background:linear-gradient(
+        90deg,
+        var(--dark-red),
+        var(--red),
+        var(--orange),
+        var(--purple),
+        var(--lilac),
+        var(--blue),
+        var(--cyan),
+        var(--green),
+        var(--lime),
+        var(--yellow)
+      );
+    }
+
     .card{
-      background:rgba(255,255,255,.94);
-      border:3px solid rgba(255,255,255,.7);
+      background:rgba(255,255,255,.96);
       border-radius:22px;
       padding:22px;
       margin-bottom:20px;
-      box-shadow:0 12px 30px rgba(0,0,0,.18);
+      box-shadow:0 12px 30px rgba(0,0,0,.22);
     }
 
-    input,select{
+    input{
       width:100%;
-      padding:13px;
+      padding:12px;
       border:2px solid #ddd;
       border-radius:12px;
       margin-bottom:12px;
-      font-size:16px;
+      font-size:15px;
     }
 
     button{
       border:none;
       border-radius:14px;
-      padding:13px 18px;
+      padding:12px 16px;
       cursor:pointer;
       font-size:15px;
       font-weight:bold;
@@ -122,13 +132,14 @@
       color:white;
     }
 
-    button:hover{
-      opacity:.9;
+    button:hover{ opacity:.9; }
+
+    button:disabled{
+      background:#999;
+      cursor:not-allowed;
     }
 
-    .logoutBtn{
-      background:var(--red);
-    }
+    .logoutBtn{ background:var(--red); }
 
     .topBar{
       display:flex;
@@ -168,19 +179,19 @@
       margin-top:8px;
     }
 
-    .screen{
-      display:none;
-    }
+    .screen{ display:none; }
+    .screen.active{ display:block; }
 
-    .screen.active{
-      display:block;
+    .matchesGrid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
+      gap:16px;
     }
 
     .match{
       border:3px solid var(--black);
-      border-radius:18px;
+      border-radius:20px;
       padding:16px;
-      margin-bottom:15px;
       background:white;
       position:relative;
       overflow:hidden;
@@ -191,31 +202,57 @@
       position:absolute;
       left:0;
       top:0;
-      width:8px;
-      height:100%;
-      background:linear-gradient(var(--red), var(--purple), var(--blue), var(--green), var(--yellow));
+      width:100%;
+      height:8px;
+      background:linear-gradient(
+        90deg,
+        var(--red),
+        var(--orange),
+        var(--purple),
+        var(--blue),
+        var(--cyan),
+        var(--green),
+        var(--yellow)
+      );
     }
 
-    .matchContent{
-      padding-left:10px;
+    .matchMeta{
+      font-size:13px;
+      margin-top:8px;
+      color:#444;
+      line-height:1.5;
     }
 
-    .teams{
+    .teamsCompact{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
-      font-size:18px;
-      font-weight:bold;
+      gap:10px;
+      margin-top:8px;
       margin-bottom:12px;
     }
 
-    .team{
+    .teamCompact{
       display:flex;
       align-items:center;
-      gap:8px;
-      min-width:180px;
+      gap:7px;
+      font-weight:bold;
+      font-size:15px;
+      width:42%;
+    }
+
+    .teamCompact.away{
+      justify-content:flex-end;
+      text-align:right;
+    }
+
+    .vs{
+      font-weight:bold;
+      font-size:14px;
+      background:var(--black);
+      color:white;
+      padding:5px 8px;
+      border-radius:999px;
     }
 
     .flag{
@@ -230,15 +267,23 @@
     .scoreInputs{
       display:flex;
       align-items:center;
-      gap:10px;
-      margin:14px 0;
-      flex-wrap:wrap;
+      gap:8px;
+      margin:12px 0;
     }
 
     .scoreInputs input{
-      width:90px;
+      width:70px;
       text-align:center;
       margin:0;
+      padding:10px;
+    }
+
+    .lastPrediction{
+      font-size:13px;
+      padding:10px;
+      background:#f3f4f6;
+      border-radius:12px;
+      margin-top:10px;
     }
 
     .rankingItem{
@@ -314,22 +359,10 @@
     }
 
     @media(max-width:600px){
-      .container{
-        padding:14px;
-      }
-
-      h1{
-        font-size:26px;
-      }
-
-      .heroOverlay{
-        justify-content:center;
-        text-align:center;
-      }
-
-      .teams{
-        font-size:16px;
-      }
+      .container{ padding:14px; }
+      h1{ font-size:28px; }
+      .logo{ width:90px; }
+      .teamCompact{ font-size:13px; }
     }
   </style>
 </head>
@@ -339,7 +372,7 @@
 <div class="container">
 
   <div class="hero">
-    <div class="heroOverlay">
+    <div class="heroInner">
       <div>
         <h1>Bolão Copa 2026</h1>
         <p class="subtitle">Palpites, ranking, fases e classificação dos grupos</p>
@@ -349,19 +382,17 @@
       <img
         class="logo"
         alt="Logo Copa 2026"
-        src="https://commons.wikimedia.org/wiki/Special:Redirect/file/2026_FIFA_World_Cup_emblem.svg"
+        src="https://upload.wikimedia.org/wikipedia/pt/d/d7/Logo_copa_2026.png"
       />
     </div>
+
+    <div class="paletteBar"></div>
   </div>
 
   <div id="loginScreen" class="card">
     <h2>Entrar no bolão</h2>
 
-    <input
-      type="email"
-      id="email"
-      placeholder="Seu e-mail"
-    />
+    <input type="email" id="email" placeholder="Seu e-mail" />
 
     <input
       type="text"
@@ -450,9 +481,11 @@ const sampleMatches = [
     homeCode:"br",
     awayCode:"ar",
     date:"2026-06-11T16:00:00",
+    stadium:"Estádio Azteca, Cidade do México",
     homeScore:null,
     awayScore:null,
-    admin:false
+    admin:false,
+    lastPrediction:null
   },
   {
     id:"m2",
@@ -463,9 +496,11 @@ const sampleMatches = [
     homeCode:"fr",
     awayCode:"es",
     date:"2026-06-12T19:00:00",
+    stadium:"MetLife Stadium, Nova York/Nova Jersey",
     homeScore:2,
     awayScore:1,
-    admin:false
+    admin:false,
+    lastPrediction:"França 2 x 1 Espanha"
   },
   {
     id:"m3",
@@ -476,9 +511,11 @@ const sampleMatches = [
     homeCode:"br",
     awayCode:"fr",
     date:"2026-06-16T16:00:00",
+    stadium:"SoFi Stadium, Los Angeles",
     homeScore:1,
     awayScore:1,
-    admin:true
+    admin:true,
+    lastPrediction:null
   },
   {
     id:"m4",
@@ -489,9 +526,11 @@ const sampleMatches = [
     homeCode:"ar",
     awayCode:"es",
     date:"2026-06-17T19:00:00",
+    stadium:"AT&T Stadium, Dallas",
     homeScore:0,
     awayScore:2,
-    admin:false
+    admin:false,
+    lastPrediction:"Argentina 1 x 2 Espanha"
   },
   {
     id:"m5",
@@ -502,9 +541,11 @@ const sampleMatches = [
     homeCode:"gb-eng",
     awayCode:"pt",
     date:"2026-06-13T16:00:00",
+    stadium:"Hard Rock Stadium, Miami",
     homeScore:3,
     awayScore:2,
-    admin:false
+    admin:false,
+    lastPrediction:null
   },
   {
     id:"m6",
@@ -515,25 +556,20 @@ const sampleMatches = [
     homeCode:"de",
     awayCode:"uy",
     date:"2026-06-14T19:00:00",
+    stadium:"BMO Field, Toronto",
     homeScore:1,
     awayScore:1,
-    admin:false
+    admin:false,
+    lastPrediction:"Alemanha 2 x 1 Uruguai"
   }
 ];
 
 window.enterBolao = async function(){
 
-  const email =
-    document.getElementById("email").value.trim().toLowerCase();
-
-  const displayNameInput =
-    document.getElementById("displayName");
-
-  const displayName =
-    displayNameInput.value.trim();
-
-  const message =
-    document.getElementById("loginMessage");
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  const displayNameInput = document.getElementById("displayName");
+  const displayName = displayNameInput.value.trim();
+  const message = document.getElementById("loginMessage");
 
   if(!email){
     message.innerHTML = `<div class="warning">Digite um e-mail</div>`;
@@ -577,16 +613,13 @@ window.enterBolao = async function(){
     openDashboard(displayName);
 
   }else{
-
     const userData = querySnapshot.docs[0].data();
     localStorage.setItem("bolaoEmail", email);
     openDashboard(userData.displayName);
-
   }
 }
 
 function openDashboard(name){
-
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
   document.getElementById("welcomeText").innerText = `Olá, ${name}`;
@@ -644,7 +677,7 @@ async function loadMatches(){
 
   const matchesDiv = document.getElementById("matchesList");
 
-  let html = "";
+  let html = `<div class="matchesGrid">`;
 
   sampleMatches.forEach(match=>{
 
@@ -655,64 +688,71 @@ async function loadMatches(){
         ? "Resultado ainda não registrado"
         : `Resultado: ${match.homeScore} x ${match.awayScore}`;
 
+    const lastPredictionText =
+      match.lastPrediction
+        ? match.lastPrediction
+        : "Não há palpite registrado";
+
     html += `
       <div class="match">
-        <div class="matchContent">
 
-          <div class="teams">
-            <div class="team">
-              <img class="flag" src="${flagUrl(match.homeCode)}" alt="${match.home}">
-              <span>${match.home}</span>
-            </div>
+        <div class="teamsCompact">
 
-            <strong>x</strong>
-
-            <div class="team">
-              <img class="flag" src="${flagUrl(match.awayCode)}" alt="${match.away}">
-              <span>${match.away}</span>
-            </div>
+          <div class="teamCompact">
+            <img class="flag" src="${flagUrl(match.homeCode)}" alt="${match.home}">
+            <span>${match.home}</span>
           </div>
 
-          <div>
-            <strong>${match.phase}</strong> · Grupo ${match.group}
+          <div class="vs">x</div>
+
+          <div class="teamCompact away">
+            <span>${match.away}</span>
+            <img class="flag" src="${flagUrl(match.awayCode)}" alt="${match.away}">
           </div>
-
-          <div>
-            ${formatDate(match.date)}
-          </div>
-
-          <div style="margin-top:8px;">
-            ${resultText}
-          </div>
-
-          ${match.admin ? `<div class="adminNotice">Dado inserido pelo administrador</div>` : ""}
-
-          <div class="scoreInputs">
-            <input
-              type="number"
-              min="0"
-              placeholder="${match.home}"
-              ${locked ? "disabled" : ""}
-            >
-
-            <strong>x</strong>
-
-            <input
-              type="number"
-              min="0"
-              placeholder="${match.away}"
-              ${locked ? "disabled" : ""}
-            >
-          </div>
-
-          <button ${locked ? "disabled style='background:#999;cursor:not-allowed;'" : ""}>
-            ${locked ? "Palpite encerrado" : "Salvar Palpite"}
-          </button>
 
         </div>
+
+        <div class="matchMeta">
+          <strong>${match.phase}</strong> · Grupo ${match.group}<br>
+          <strong>Data:</strong> ${formatDate(match.date)}<br>
+          <strong>Local:</strong> ${match.stadium}<br>
+          <strong>${resultText}</strong>
+        </div>
+
+        ${match.admin ? `<div class="adminNotice">Dado inserido pelo administrador</div>` : ""}
+
+        <div class="scoreInputs">
+          <input
+            type="number"
+            min="0"
+            placeholder="${match.home}"
+            ${locked ? "disabled" : ""}
+          >
+
+          <strong>x</strong>
+
+          <input
+            type="number"
+            min="0"
+            placeholder="${match.away}"
+            ${locked ? "disabled" : ""}
+          >
+        </div>
+
+        <button ${locked ? "disabled" : ""}>
+          ${locked ? "Palpite encerrado" : "Salvar Palpite"}
+        </button>
+
+        <div class="lastPrediction">
+          <strong>Último palpite:</strong><br>
+          ${lastPredictionText}
+        </div>
+
       </div>
     `;
   });
+
+  html += `</div>`;
 
   matchesDiv.innerHTML = html;
 }
@@ -914,11 +954,8 @@ async function autoLogin(email){
   const querySnapshot = await getDocs(q);
 
   if(!querySnapshot.empty){
-
     const userData = querySnapshot.docs[0].data();
-
     document.getElementById("email").value = email;
-
     openDashboard(userData.displayName);
   }
 }
