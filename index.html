@@ -1,4 +1,4 @@
-<3
+S2
 
   <!DOCTYPE html>
 <html lang="pt-BR">
@@ -332,10 +332,38 @@
       background:#fffbea;
     }
 
+    .adminEditBox{
+      display:none;
+      margin-top:14px;
+      padding:14px;
+      border-radius:16px;
+      background:#fffbea;
+      border:2px dashed #111;
+    }
+
+    .adminEditGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .adminEditGrid .full{
+      grid-column:1 / -1;
+    }
+
     .smallText{
       font-size:13px;
       color:#555;
       line-height:1.5;
+    }
+
+    .adminBtn{
+      background:#6d00e8;
+      margin-top:10px;
+    }
+
+    .saveAdminBtn{
+      background:#087f23;
     }
 
     @media(max-width:600px){
@@ -343,6 +371,7 @@
       h1{ font-size:28px; }
       .logo{ width:90px; }
       .teamCompact{ font-size:13px; }
+      .adminEditGrid{ grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -391,7 +420,7 @@
     <div id="adminPanel" class="card adminBox" style="display:none;">
       <h2>Área do ADMIN</h2>
       <p class="smallText">
-        Use este botão para criar jogos de teste no Firestore. Depois, o site passa a carregar os jogos do banco.
+        Use este painel para importar jogos de teste e recalcular o ranking.
       </p>
       <button onclick="importTestMatches()">Importar Jogos de Teste</button>
       <button onclick="recalculateRanking()" style="margin-top:8px;">Recalcular Ranking</button>
@@ -482,19 +511,19 @@ let currentUser = null;
 let matchesCache = [];
 
 const teamColors = {
-  "Alemanha":["#ffffff","#000000"],
-  "Arábia Saudita":["#ffffff","#00843d"],
+  "Alemanha":["#000000","#dd0000","#ffce00"],
+  "Arábia Saudita":["#00843d","#ffffff"],
   "Argélia":["#ffffff","#006233"],
   "Argentina":["#74acdf","#ffffff"],
   "Austrália":["#ffcd00","#00843d"],
   "Áustria":["#ed2939","#ffffff"],
   "Bélgica":["#fae042","#ed2939"],
-  "Brasil":["#ffdf00","#002776"],
+  "Brasil":["#009739","#ffdf00"],
   "Cabo Verde":["#003893","#ffffff"],
   "Canadá":["#ff0000","#ffffff"],
   "Catar":["#8a1538","#ffffff"],
   "Colômbia":["#fcd116","#ce1126"],
-  "Coreia do Sul":["#c60c30","#003478"],
+  "Coreia do Sul":["#c60c30","#003478","#ffffff"],
   "Costa do Marfim":["#f77f00","#009e60"],
   "Croácia":["#ff0000","#ffffff"],
   "Equador":["#ffdd00","#034ea2"],
@@ -502,12 +531,12 @@ const teamColors = {
   "Estados Unidos":["#ffffff","#b31942"],
   "França":["#002654","#ffffff"],
   "Gana":["#ffffff","#ce1126"],
-  "Holanda":["#ff6600","#ffffff"],
-  "Inglaterra":["#ffffff","#001f5b"],
+  "Holanda":["#ff6600"],
+  "Inglaterra":["#ffffff","#cf142b"],
   "Irã":["#ffffff","#da0000"],
   "Japão":["#001e62","#ffffff"],
   "Marrocos":["#c1272d","#006233"],
-  "México":["#006847","#ffffff"],
+  "México":["#006847","#ffffff","#ce1126"],
   "Noruega":["#ba0c2f","#00205b"],
   "Panamá":["#d21034","#005293"],
   "Paraguai":["#ffffff","#d52b1e"],
@@ -515,7 +544,7 @@ const teamColors = {
   "Senegal":["#ffffff","#00853f"],
   "Suécia":["#fecc00","#006aa7"],
   "Suíça":["#ff0000","#ffffff"],
-  "Uruguai":["#75aadb","#ffffff"]
+  "Uruguai":["#75aadb"]
 };
 
 const testMatches = [
@@ -737,6 +766,13 @@ function formatDate(dateString){
   });
 }
 
+function dateTimeLocalValue(dateString){
+  if(!dateString) return "";
+  const date = new Date(dateString);
+  const pad = n => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 function getLockDate(dateString){
   return new Date(new Date(dateString).getTime() - 60 * 60 * 1000);
 }
@@ -755,17 +791,23 @@ function isLocked(dateString){
   return new Date() >= getLockDate(dateString);
 }
 
+function colorStops(colors, start, end){
+  if(!colors || colors.length === 0) return "";
+  if(colors.length === 1) return `${colors[0]} ${start}%, ${colors[0]} ${end}%`;
+
+  const step = (end - start) / (colors.length - 1);
+  return colors.map((color, index)=>`${color} ${start + step * index}%`).join(", ");
+}
+
 function countryBar(home, away){
   const h = teamColors[home] || ["#111111","#cccccc"];
   const a = teamColors[away] || ["#cccccc","#111111"];
 
   return `linear-gradient(
     90deg,
-    ${h[0]} 0%,
-    ${h[1]} 24%,
+    ${colorStops(h, 0, 42)},
     #ffffff 50%,
-    ${a[0]} 76%,
-    ${a[1]} 100%
+    ${colorStops(a, 58, 100)}
   )`;
 }
 
@@ -962,6 +1004,98 @@ window.savePrediction = async function(matchId){
   await loadRanking();
 }
 
+window.toggleAdminEdit = function(matchId){
+  const box = document.getElementById(`adminEdit_${matchId}`);
+
+  if(!box) return;
+
+  box.style.display =
+    box.style.display === "block"
+      ? "none"
+      : "block";
+}
+
+window.saveAdminMatch = async function(matchId){
+
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode editar jogos.");
+    return;
+  }
+
+  const match = matchesCache.find(m=>m.id === matchId);
+
+  if(!match) return;
+
+  const dateValue = document.getElementById(`adminDate_${matchId}`).value;
+  const stadium = document.getElementById(`adminStadium_${matchId}`).value.trim();
+  const status = document.getElementById(`adminStatus_${matchId}`).value;
+  const homeScoreRaw = document.getElementById(`adminHomeScore_${matchId}`).value;
+  const awayScoreRaw = document.getElementById(`adminAwayScore_${matchId}`).value;
+
+  const homeScore =
+    homeScoreRaw === ""
+      ? null
+      : Number(homeScoreRaw);
+
+  const awayScore =
+    awayScoreRaw === ""
+      ? null
+      : Number(awayScoreRaw);
+
+  if(!dateValue){
+    alert("Preencha a data e hora do jogo.");
+    return;
+  }
+
+  if(homeScore !== null && homeScore < 0){
+    alert("Placar inválido.");
+    return;
+  }
+
+  if(awayScore !== null && awayScore < 0){
+    alert("Placar inválido.");
+    return;
+  }
+
+  const updatedData = {
+    date:dateValue,
+    stadium,
+    status,
+    homeScore,
+    awayScore,
+    adminOverride:true,
+    adminUpdatedAt:new Date().toISOString(),
+    adminUpdatedBy:currentUser.email,
+    updatedAt:new Date().toISOString()
+  };
+
+  await setDoc(
+    doc(db, "matches", matchId),
+    updatedData,
+    { merge:true }
+  );
+
+  await addDoc(
+    collection(db, "adminLogs"),
+    {
+      adminUserId:currentUser.id,
+      adminEmail:currentUser.email,
+      type:"match_edit",
+      matchId,
+      previousValue:match,
+      newValue:updatedData,
+      createdAt:new Date().toISOString()
+    }
+  );
+
+  alert("Jogo atualizado com sucesso.");
+
+  await loadMatchesFromFirestore();
+  await recalculateRanking(false);
+  await loadRanking();
+  loadGroups();
+}
+
 async function loadMatches(){
 
   const matchesDiv = document.getElementById("matchesList");
@@ -1053,6 +1187,84 @@ async function loadMatches(){
           <strong>Último palpite:</strong><br>
           ${lastPredictionText}
         </div>
+
+        ${
+          currentUser && currentUser.isAdmin
+          ? `
+            <button class="adminBtn" onclick="toggleAdminEdit('${match.id}')">
+              Editar jogo
+            </button>
+
+            <div class="adminEditBox" id="adminEdit_${match.id}">
+              <h3>Editar jogo</h3>
+
+              <div class="adminEditGrid">
+                <div class="full">
+                  <label>Data e hora</label>
+                  <input
+                    id="adminDate_${match.id}"
+                    type="datetime-local"
+                    value="${dateTimeLocalValue(match.date)}"
+                  >
+                </div>
+
+                <div class="full">
+                  <label>Estádio / local</label>
+                  <input
+                    id="adminStadium_${match.id}"
+                    type="text"
+                    value="${match.stadium || ""}"
+                  >
+                </div>
+
+                <div>
+                  <label>Status</label>
+                  <select id="adminStatus_${match.id}">
+                    <option value="scheduled" ${match.status === "scheduled" ? "selected" : ""}>scheduled</option>
+                    <option value="live" ${match.status === "live" ? "selected" : ""}>live</option>
+                    <option value="finished" ${match.status === "finished" ? "selected" : ""}>finished</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label>Grupo</label>
+                  <input
+                    type="text"
+                    value="${match.group || "-"}"
+                    disabled
+                  >
+                </div>
+
+                <div>
+                  <label>Gols ${match.home}</label>
+                  <input
+                    id="adminHomeScore_${match.id}"
+                    type="number"
+                    min="0"
+                    value="${match.homeScore === null || match.homeScore === undefined ? "" : match.homeScore}"
+                  >
+                </div>
+
+                <div>
+                  <label>Gols ${match.away}</label>
+                  <input
+                    id="adminAwayScore_${match.id}"
+                    type="number"
+                    min="0"
+                    value="${match.awayScore === null || match.awayScore === undefined ? "" : match.awayScore}"
+                  >
+                </div>
+
+                <div class="full">
+                  <button class="saveAdminBtn" onclick="saveAdminMatch('${match.id}')">
+                    Salvar edição do jogo
+                  </button>
+                </div>
+              </div>
+            </div>
+          `
+          : ""
+        }
 
       </div>
     `;
