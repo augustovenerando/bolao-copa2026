@@ -1,86 +1,148 @@
 ```html
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>Bolão Copa 2026</title>
 
   <style>
+
+    *{
+      box-sizing:border-box;
+    }
+
     body{
-      font-family: Arial, sans-serif;
-      background:#f5f5f5;
       margin:0;
       padding:0;
+      background:#f3f4f6;
+      font-family:Arial,sans-serif;
     }
 
     .container{
-      max-width:400px;
-      margin:80px auto;
-      background:white;
-      padding:30px;
-      border-radius:12px;
-      box-shadow:0 0 10px rgba(0,0,0,0.1);
+      max-width:900px;
+      margin:40px auto;
+      padding:20px;
     }
 
-    h1{
-      text-align:center;
-      margin-bottom:30px;
+    .card{
+      background:white;
+      border-radius:14px;
+      padding:20px;
+      margin-bottom:20px;
+      box-shadow:0 0 10px rgba(0,0,0,0.08);
+    }
+
+    h1,h2,h3{
+      margin-top:0;
     }
 
     input{
       width:100%;
       padding:12px;
-      margin-bottom:15px;
-      border:1px solid #ccc;
+      border:1px solid #d1d5db;
       border-radius:8px;
+      margin-bottom:12px;
       font-size:16px;
-      box-sizing:border-box;
     }
 
     button{
-      width:100%;
-      padding:12px;
-      background:#111827;
-      color:white;
       border:none;
       border-radius:8px;
-      font-size:16px;
+      padding:12px 18px;
       cursor:pointer;
+      font-size:15px;
+      background:#111827;
+      color:white;
     }
 
     button:hover{
       opacity:0.9;
     }
 
-    #message{
-      margin-top:15px;
+    .logoutBtn{
+      background:#dc2626;
+      margin-top:10px;
+    }
+
+    .match{
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:16px;
+      margin-bottom:15px;
+    }
+
+    .teams{
+      font-size:20px;
+      font-weight:bold;
+      margin-bottom:12px;
+    }
+
+    .scoreInputs{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .scoreInputs input{
+      width:80px;
+      margin:0;
       text-align:center;
-      color:#444;
     }
 
-    #dashboard{
-      display:none;
+    .rankingItem{
+      padding:10px 0;
+      border-bottom:1px solid #eee;
     }
 
-    .card{
-      background:#f9fafb;
-      padding:15px;
-      border-radius:10px;
-      margin-top:15px;
+    .topBar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:20px;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .badge{
+      background:#111827;
+      color:white;
+      padding:4px 10px;
+      border-radius:20px;
+      font-size:12px;
+    }
+
+    .success{
+      color:#16a34a;
+      font-weight:bold;
+      margin-top:10px;
+    }
+
+    .warning{
+      color:#dc2626;
+      font-weight:bold;
+      margin-top:10px;
     }
 
   </style>
+
 </head>
 
 <body>
 
 <div class="container">
 
-  <div id="login">
+  <div id="loginScreen" class="card">
 
-    <h1>Bolão Copa 2026</h1>
+    <h1>🏆 Bolão Copa 2026</h1>
 
     <input
       type="email"
@@ -99,22 +161,48 @@
       Entrar
     </button>
 
-    <div id="message"></div>
+    <div id="loginMessage"></div>
 
   </div>
 
-  <div id="dashboard">
+  <div id="dashboard" style="display:none;">
 
-    <h1 id="welcome"></h1>
+    <div class="topBar">
 
-    <div class="card">
-      <strong>Ranking:</strong>
-      <p>Em breve</p>
+      <div>
+        <h1 id="welcomeText"></h1>
+        <div class="badge">
+          Bolão Copa 2026
+        </div>
+      </div>
+
+      <button
+        class="logoutBtn"
+        onclick="logout()"
+      >
+        Sair
+      </button>
+
     </div>
 
     <div class="card">
-      <strong>Meus palpites:</strong>
-      <p>Em breve</p>
+
+      <h2>🏅 Ranking Geral</h2>
+
+      <div id="rankingList">
+        Carregando ranking...
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <h2>⚽ Jogos e Palpites</h2>
+
+      <div id="matchesList">
+        Carregando jogos...
+      </div>
+
     </div>
 
   </div>
@@ -123,7 +211,11 @@
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
   getFirestore,
@@ -133,26 +225,44 @@ import {
   getDocs,
   addDoc
 }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
+
   apiKey: "AIzaSyBe8zvoZA5R7ErCjBhLWM8oK6athl7pu-0",
-  authDomain: "bolao-copa-2026-9f20b.firebaseapp.com",
-  projectId: "bolao-copa-2026-9f20b",
-  storageBucket: "bolao-copa-2026-9f20b.firebasestorage.app",
-  messagingSenderId: "955726811414",
-  appId: "1:955726811414:web:8a4d82e90d4439a3e1c037"
+
+  authDomain:
+  "bolao-copa-2026-9f20b.firebaseapp.com",
+
+  projectId:
+  "bolao-copa-2026-9f20b",
+
+  storageBucket:
+  "bolao-copa-2026-9f20b.firebasestorage.app",
+
+  messagingSenderId:
+  "955726811414",
+
+  appId:
+  "1:955726811414:web:8a4d82e90d4439a3e1c037"
+
 };
 
-const app = initializeApp(firebaseConfig);
+const app =
+  initializeApp(firebaseConfig);
 
-const db = getFirestore(app);
+const db =
+  getFirestore(app);
 
 window.enterBolao = async function(){
 
   const email =
-    document.getElementById("email").value.trim().toLowerCase();
+    document
+      .getElementById("email")
+      .value
+      .trim()
+      .toLowerCase();
 
   const displayNameInput =
     document.getElementById("displayName");
@@ -161,11 +271,17 @@ window.enterBolao = async function(){
     displayNameInput.value.trim();
 
   const message =
-    document.getElementById("message");
+    document.getElementById("loginMessage");
 
   if(!email){
-    message.innerText = "Digite um e-mail";
+
+    message.innerHTML =
+      `<div class="warning">
+        Digite um e-mail
+      </div>`;
+
     return;
+
   }
 
   const q = query(
@@ -173,7 +289,8 @@ window.enterBolao = async function(){
     where("email", "==", email)
   );
 
-  const querySnapshot = await getDocs(q);
+  const querySnapshot =
+    await getDocs(q);
 
   if(querySnapshot.empty){
 
@@ -181,26 +298,41 @@ window.enterBolao = async function(){
 
       displayNameInput.style.display = "block";
 
-      message.innerText =
-        "Novo usuário. Escolha um nome.";
+      message.innerHTML =
+        `<div class="success">
+          Novo usuário. Escolha um nome.
+        </div>`;
 
       return;
+
     }
 
     if(!displayName){
 
-      message.innerText =
-        "Digite um nome de exibição";
+      message.innerHTML =
+        `<div class="warning">
+          Digite um nome de exibição
+        </div>`;
 
       return;
+
     }
 
-    await addDoc(collection(db, "users"), {
-      email,
-      displayName,
-      createdAt: new Date().toISOString(),
-      isAdmin:false
-    });
+    await addDoc(
+      collection(db, "users"),
+      {
+        email,
+        displayName,
+        createdAt:
+          new Date().toISOString(),
+        isAdmin:false
+      }
+    );
+
+    localStorage.setItem(
+      "bolaoEmail",
+      email
+    );
 
     openDashboard(displayName);
 
@@ -209,7 +341,14 @@ window.enterBolao = async function(){
     const userData =
       querySnapshot.docs[0].data();
 
-    openDashboard(userData.displayName);
+    localStorage.setItem(
+      "bolaoEmail",
+      email
+    );
+
+    openDashboard(
+      userData.displayName
+    );
 
   }
 
@@ -217,12 +356,187 @@ window.enterBolao = async function(){
 
 function openDashboard(name){
 
-  document.getElementById("login").style.display = "none";
+  document
+    .getElementById("loginScreen")
+    .style.display = "none";
 
-  document.getElementById("dashboard").style.display = "block";
+  document
+    .getElementById("dashboard")
+    .style.display = "block";
 
-  document.getElementById("welcome").innerText =
-    "Olá, " + name;
+  document
+    .getElementById("welcomeText")
+    .innerText =
+      `Olá, ${name}`;
+
+  loadRanking();
+
+  loadFakeMatches();
+
+}
+
+window.logout = function(){
+
+  localStorage.removeItem(
+    "bolaoEmail"
+  );
+
+  location.reload();
+
+}
+
+async function loadRanking(){
+
+  const rankingDiv =
+    document.getElementById(
+      "rankingList"
+    );
+
+  const q =
+    query(collection(db, "users"));
+
+  const querySnapshot =
+    await getDocs(q);
+
+  let html = "";
+
+  let position = 1;
+
+  querySnapshot.forEach((doc)=>{
+
+    const user = doc.data();
+
+    html += `
+      <div class="rankingItem">
+        🏆 ${position}º -
+        ${user.displayName}
+      </div>
+    `;
+
+    position++;
+
+  });
+
+  rankingDiv.innerHTML = html;
+
+}
+
+async function loadFakeMatches(){
+
+  const matchesDiv =
+    document.getElementById(
+      "matchesList"
+    );
+
+  matchesDiv.innerHTML = `
+
+    <div class="match">
+
+      <div class="teams">
+        🇧🇷 Brasil vs 🇦🇷 Argentina
+      </div>
+
+      <div>
+        Fase de Grupos
+      </div>
+
+      <br>
+
+      <div class="scoreInputs">
+
+        <input
+          type="number"
+          placeholder="Brasil"
+        >
+
+        <strong>x</strong>
+
+        <input
+          type="number"
+          placeholder="Argentina"
+        >
+
+      </div>
+
+      <button>
+        Salvar Palpite
+      </button>
+
+    </div>
+
+    <div class="match">
+
+      <div class="teams">
+        🇫🇷 França vs 🇪🇸 Espanha
+      </div>
+
+      <div>
+        Quartas de Final
+      </div>
+
+      <br>
+
+      <div class="scoreInputs">
+
+        <input
+          type="number"
+          placeholder="França"
+        >
+
+        <strong>x</strong>
+
+        <input
+          type="number"
+          placeholder="Espanha"
+        >
+
+      </div>
+
+      <button>
+        Salvar Palpite
+      </button>
+
+    </div>
+
+  `;
+
+}
+
+const savedEmail =
+  localStorage.getItem(
+    "bolaoEmail"
+  );
+
+if(savedEmail){
+
+  autoLogin(savedEmail);
+
+}
+
+async function autoLogin(email){
+
+  const q = query(
+    collection(db, "users"),
+    where("email", "==", email)
+  );
+
+  const querySnapshot =
+    await getDocs(q);
+
+  if(!querySnapshot.empty){
+
+    const userData =
+      querySnapshot.docs[0].data();
+
+    document
+      .getElementById("email")
+      .value = email;
+
+    openDashboard(
+      userData.displayName
+    );
+
+  }
 
 }
 
