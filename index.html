@@ -1,6 +1,6 @@
----
+<3
 
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -12,16 +12,12 @@
 
     :root{
       --red:#e60000;
-      --dark-red:#831313;
       --orange:#ff3d0b;
       --purple:#6d00e8;
-      --lilac:#a77cf4;
       --blue:#3454f5;
       --cyan:#55f0d0;
       --green:#05c855;
-      --lime:#b2f000;
       --yellow:#eaff2e;
-      --navy:#242b7f;
       --black:#050505;
       --white:#ffffff;
     }
@@ -97,13 +93,14 @@
       box-shadow:0 12px 30px rgba(0,0,0,.22);
     }
 
-    input{
+    input, select{
       width:100%;
       padding:12px;
       border:2px solid #ddd;
       border-radius:12px;
       margin-bottom:12px;
       font-size:15px;
+      background:white;
     }
 
     button{
@@ -330,6 +327,17 @@
       font-weight:bold;
     }
 
+    .adminBox{
+      border:3px dashed var(--black);
+      background:#fffbea;
+    }
+
+    .smallText{
+      font-size:13px;
+      color:#555;
+      line-height:1.5;
+    }
+
     @media(max-width:600px){
       .container{ padding:14px; }
       h1{ font-size:28px; }
@@ -380,8 +388,19 @@
       <button class="logoutBtn" onclick="logout()">Sair</button>
     </div>
 
+    <div id="adminPanel" class="card adminBox" style="display:none;">
+      <h2>Área do ADMIN</h2>
+      <p class="smallText">
+        Use este botão para criar jogos de teste no Firestore. Depois, o site passa a carregar os jogos do banco.
+      </p>
+      <button onclick="importTestMatches()">Importar Jogos de Teste</button>
+      <button onclick="recalculateRanking()" style="margin-top:8px;">Recalcular Ranking</button>
+      <div id="adminMessage"></div>
+    </div>
+
     <div class="tabs">
       <button class="tabBtn active" onclick="showScreen('matchesScreen', this)">⚽ Jogos</button>
+      <button class="tabBtn" onclick="showScreen('championScreen', this)">🏆 Campeão</button>
       <button class="tabBtn" onclick="showScreen('rankingScreen', this)">🏅 Ranking</button>
       <button class="tabBtn" onclick="showScreen('groupsScreen', this)">📊 Grupos</button>
     </div>
@@ -389,6 +408,26 @@
     <div id="matchesScreen" class="screen active card">
       <h2>⚽ Jogos e Palpites</h2>
       <div id="matchesList">Carregando jogos...</div>
+    </div>
+
+    <div id="championScreen" class="screen card">
+      <h2>🏆 Palpite de Campeão</h2>
+
+      <p class="smallText">
+        O bônus depende do momento em que o palpite foi salvo.
+      </p>
+
+      <select id="championSelect">
+        <option value="">Selecione o campeão</option>
+      </select>
+
+      <button onclick="saveChampionPrediction()">Salvar Palpite de Campeão</button>
+
+      <div id="championMessage"></div>
+
+      <div class="lastPrediction" id="lastChampionPrediction">
+        Carregando último palpite...
+      </div>
     </div>
 
     <div id="rankingScreen" class="screen card">
@@ -418,7 +457,9 @@ import {
   addDoc,
   doc,
   getDoc,
-  setDoc
+  setDoc,
+  updateDoc,
+  orderBy
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -434,20 +475,50 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const ADMIN_EMAIL = "acvs@uol.com.br";
+const ADMIN_NAME = "ADMIN";
+
 let currentUser = null;
+let matchesCache = [];
 
 const teamColors = {
-  "Brasil":["#009739","#ffdf00"],
+  "Alemanha":["#ffffff","#000000"],
+  "Arábia Saudita":["#ffffff","#00843d"],
+  "Argélia":["#ffffff","#006233"],
   "Argentina":["#74acdf","#ffffff"],
-  "França":["#0055a4","#ef4135"],
-  "Espanha":["#c60b1e","#ffc400"],
-  "Inglaterra":["#ffffff","#cf142b"],
-  "Portugal":["#006600","#ff0000"],
-  "Alemanha":["#000000","#dd0000"],
-  "Uruguai":["#75aadb","#fcd116"]
+  "Austrália":["#ffcd00","#00843d"],
+  "Áustria":["#ed2939","#ffffff"],
+  "Bélgica":["#fae042","#ed2939"],
+  "Brasil":["#ffdf00","#002776"],
+  "Cabo Verde":["#003893","#ffffff"],
+  "Canadá":["#ff0000","#ffffff"],
+  "Catar":["#8a1538","#ffffff"],
+  "Colômbia":["#fcd116","#ce1126"],
+  "Coreia do Sul":["#c60c30","#003478"],
+  "Costa do Marfim":["#f77f00","#009e60"],
+  "Croácia":["#ff0000","#ffffff"],
+  "Equador":["#ffdd00","#034ea2"],
+  "Espanha":["#c60b1e","#0039a6"],
+  "Estados Unidos":["#ffffff","#b31942"],
+  "França":["#002654","#ffffff"],
+  "Gana":["#ffffff","#ce1126"],
+  "Holanda":["#ff6600","#ffffff"],
+  "Inglaterra":["#ffffff","#001f5b"],
+  "Irã":["#ffffff","#da0000"],
+  "Japão":["#001e62","#ffffff"],
+  "Marrocos":["#c1272d","#006233"],
+  "México":["#006847","#ffffff"],
+  "Noruega":["#ba0c2f","#00205b"],
+  "Panamá":["#d21034","#005293"],
+  "Paraguai":["#ffffff","#d52b1e"],
+  "Portugal":["#ff0000","#006600"],
+  "Senegal":["#ffffff","#00853f"],
+  "Suécia":["#fecc00","#006aa7"],
+  "Suíça":["#ff0000","#ffffff"],
+  "Uruguai":["#75aadb","#ffffff"]
 };
 
-const sampleMatches = [
+const testMatches = [
   {
     id:"m1",
     group:"A",
@@ -460,7 +531,8 @@ const sampleMatches = [
     stadium:"Estádio Azteca, Cidade do México",
     homeScore:null,
     awayScore:null,
-    admin:false
+    status:"scheduled",
+    adminOverride:false
   },
   {
     id:"m2",
@@ -474,7 +546,8 @@ const sampleMatches = [
     stadium:"MetLife Stadium, Nova York/Nova Jersey",
     homeScore:2,
     awayScore:1,
-    admin:false
+    status:"finished",
+    adminOverride:false
   },
   {
     id:"m3",
@@ -488,7 +561,8 @@ const sampleMatches = [
     stadium:"SoFi Stadium, Los Angeles",
     homeScore:1,
     awayScore:1,
-    admin:true
+    status:"finished",
+    adminOverride:true
   },
   {
     id:"m4",
@@ -502,7 +576,8 @@ const sampleMatches = [
     stadium:"AT&T Stadium, Dallas",
     homeScore:0,
     awayScore:2,
-    admin:false
+    status:"finished",
+    adminOverride:false
   },
   {
     id:"m5",
@@ -516,7 +591,8 @@ const sampleMatches = [
     stadium:"Hard Rock Stadium, Miami",
     homeScore:3,
     awayScore:2,
-    admin:false
+    status:"finished",
+    adminOverride:false
   },
   {
     id:"m6",
@@ -530,7 +606,8 @@ const sampleMatches = [
     stadium:"BMO Field, Toronto",
     homeScore:1,
     awayScore:1,
-    admin:false
+    status:"finished",
+    adminOverride:false
   }
 ];
 
@@ -538,7 +615,7 @@ window.enterBolao = async function(){
 
   const email = document.getElementById("email").value.trim().toLowerCase();
   const displayNameInput = document.getElementById("displayName");
-  const displayName = displayNameInput.value.trim();
+  let displayName = displayNameInput.value.trim();
   const message = document.getElementById("loginMessage");
 
   if(!email){
@@ -546,19 +623,28 @@ window.enterBolao = async function(){
     return;
   }
 
+  if(email === ADMIN_EMAIL){
+    displayName = ADMIN_NAME;
+  }
+
   const q = query(collection(db, "users"), where("email", "==", email));
   const querySnapshot = await getDocs(q);
 
   if(querySnapshot.empty){
 
-    if(displayNameInput.style.display === "none"){
+    if(email !== ADMIN_EMAIL && displayNameInput.style.display === "none"){
       displayNameInput.style.display = "block";
       message.innerHTML = `<div class="success">Novo usuário. Escolha um nome.</div>`;
       return;
     }
 
-    if(!displayName){
+    if(email !== ADMIN_EMAIL && !displayName){
       message.innerHTML = `<div class="warning">Digite um nome de exibição</div>`;
+      return;
+    }
+
+    if(displayName.toUpperCase() === ADMIN_NAME && email !== ADMIN_EMAIL){
+      message.innerHTML = `<div class="warning">Este nome é reservado.</div>`;
       return;
     }
 
@@ -566,16 +652,18 @@ window.enterBolao = async function(){
       email,
       displayName,
       createdAt:new Date().toISOString(),
-      isAdmin:false,
+      isAdmin:email === ADMIN_EMAIL,
       totalPoints:0,
       exactScores:0,
-      winnerHits:0
+      winnerHits:0,
+      championBonus:0
     });
 
     currentUser = {
       id:newUserRef.id,
       email,
-      displayName
+      displayName,
+      isAdmin:email === ADMIN_EMAIL
     };
 
     localStorage.setItem("bolaoEmail", email);
@@ -586,24 +674,39 @@ window.enterBolao = async function(){
     const userDoc = querySnapshot.docs[0];
     const userData = userDoc.data();
 
+    if(email === ADMIN_EMAIL && userData.displayName !== ADMIN_NAME){
+      await updateDoc(doc(db, "users", userDoc.id), {
+        displayName:ADMIN_NAME,
+        isAdmin:true
+      });
+    }
+
     currentUser = {
       id:userDoc.id,
       email:userData.email,
-      displayName:userData.displayName
+      displayName:email === ADMIN_EMAIL ? ADMIN_NAME : userData.displayName,
+      isAdmin:email === ADMIN_EMAIL
     };
 
     localStorage.setItem("bolaoEmail", email);
-    openDashboard(userData.displayName);
+    openDashboard(currentUser.displayName);
   }
 }
 
-function openDashboard(name){
+async function openDashboard(name){
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
   document.getElementById("welcomeText").innerText = `Olá, ${name}`;
 
-  loadMatches();
-  loadRanking();
+  if(currentUser && currentUser.isAdmin){
+    document.getElementById("adminPanel").style.display = "block";
+  }
+
+  await loadMatchesFromFirestore();
+  loadChampionOptions();
+  await loadLastChampionPrediction();
+  await recalculateRanking(false);
+  await loadRanking();
   loadGroups();
 }
 
@@ -624,6 +727,7 @@ function flagUrl(code){
 }
 
 function formatDate(dateString){
+  if(!dateString) return "-";
   return new Date(dateString).toLocaleString("pt-BR", {
     day:"2-digit",
     month:"2-digit",
@@ -665,6 +769,126 @@ function countryBar(home, away){
   )`;
 }
 
+function getMatchResultType(homeScore, awayScore){
+  if(homeScore > awayScore) return "home";
+  if(homeScore < awayScore) return "away";
+  return "draw";
+}
+
+function calculatePredictionPoints(prediction, match){
+  if(match.status !== "finished") return {points:0, exact:false, winner:false};
+
+  if(match.homeScore === null || match.awayScore === null) return {points:0, exact:false, winner:false};
+
+  const exact =
+    prediction.predictedHomeScore === match.homeScore &&
+    prediction.predictedAwayScore === match.awayScore;
+
+  if(exact){
+    return {points:15, exact:true, winner:true};
+  }
+
+  const predictedResult =
+    getMatchResultType(prediction.predictedHomeScore, prediction.predictedAwayScore);
+
+  const officialResult =
+    getMatchResultType(match.homeScore, match.awayScore);
+
+  if(predictedResult === officialResult){
+    return {points:5, exact:false, winner:true};
+  }
+
+  return {points:0, exact:false, winner:false};
+}
+
+function getCurrentChampionBonus(){
+  const now = new Date();
+
+  const firstMatch = new Date("2026-06-11T16:00:00");
+  const groupEnd = new Date("2026-06-27T23:59:59");
+  const round32End = new Date("2026-07-03T23:59:59");
+  const round16End = new Date("2026-07-07T23:59:59");
+  const quarterEnd = new Date("2026-07-11T23:59:59");
+  const semiEnd = new Date("2026-07-15T23:59:59");
+  const finalEnd = new Date("2026-07-19T23:59:59");
+
+  if(now < firstMatch){
+    return {phase:"Antes do primeiro jogo", bonus:100};
+  }
+
+  if(now <= groupEnd){
+    return {phase:"Fase de grupos", bonus:75};
+  }
+
+  if(now <= round32End){
+    return {phase:"16 avos", bonus:60};
+  }
+
+  if(now <= round16End){
+    return {phase:"Oitavas", bonus:45};
+  }
+
+  if(now <= quarterEnd){
+    return {phase:"Quartas", bonus:30};
+  }
+
+  if(now <= semiEnd){
+    return {phase:"Semifinal", bonus:15};
+  }
+
+  if(now <= finalEnd){
+    return {phase:"Final", bonus:5};
+  }
+
+  return {phase:"Encerrado", bonus:0};
+}
+
+window.importTestMatches = async function(){
+
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode importar jogos.");
+    return;
+  }
+
+  const adminMessage = document.getElementById("adminMessage");
+  adminMessage.innerHTML = "Importando jogos...";
+
+  for(const match of testMatches){
+    await setDoc(
+      doc(db, "matches", match.id),
+      {
+        ...match,
+        source:"test",
+        updatedAt:new Date().toISOString()
+      },
+      { merge:true }
+    );
+  }
+
+  adminMessage.innerHTML = `<div class="success">Jogos importados com sucesso.</div>`;
+
+  await loadMatchesFromFirestore();
+  loadChampionOptions();
+  loadGroups();
+}
+
+async function loadMatchesFromFirestore(){
+
+  const q = query(collection(db, "matches"), orderBy("date", "asc"));
+  const querySnapshot = await getDocs(q);
+
+  matchesCache = [];
+
+  querySnapshot.forEach(docSnap=>{
+    matchesCache.push({
+      id:docSnap.id,
+      ...docSnap.data()
+    });
+  });
+
+  await loadMatches();
+}
+
 async function getPrediction(matchId){
   if(!currentUser) return null;
 
@@ -681,7 +905,7 @@ async function getPrediction(matchId){
 
 window.savePrediction = async function(matchId){
 
-  const match = sampleMatches.find(m=>m.id === matchId);
+  const match = matchesCache.find(m=>m.id === matchId);
 
   if(!match) return;
 
@@ -733,22 +957,34 @@ window.savePrediction = async function(matchId){
 
   alert("Palpite salvo com sucesso.");
 
-  loadMatches();
+  await loadMatches();
+  await recalculateRanking(false);
+  await loadRanking();
 }
 
 async function loadMatches(){
 
   const matchesDiv = document.getElementById("matchesList");
 
+  if(matchesCache.length === 0){
+    matchesDiv.innerHTML = `
+      <div class="warning">
+        Nenhum jogo cadastrado ainda.
+        ${currentUser && currentUser.isAdmin ? "Use o botão Importar Jogos de Teste na área do ADMIN." : ""}
+      </div>
+    `;
+    return;
+  }
+
   let html = `<div class="matchesGrid">`;
 
-  for(const match of sampleMatches){
+  for(const match of matchesCache){
 
     const locked = isLocked(match.date);
     const prediction = await getPrediction(match.id);
 
     const resultText =
-      match.homeScore === null
+      match.homeScore === null || match.awayScore === null
         ? "Resultado ainda não registrado"
         : `Resultado: ${match.homeScore} x ${match.awayScore}`;
 
@@ -779,21 +1015,21 @@ async function loadMatches(){
         </div>
 
         <div class="matchMeta">
-          <strong>${match.phase}</strong> · Grupo ${match.group}<br>
+          <strong>${match.phase}</strong> · Grupo ${match.group || "-"}<br>
           <strong>Data:</strong> ${formatDate(match.date)}<br>
-          <strong>Local:</strong> ${match.stadium}<br>
+          <strong>Local:</strong> ${match.stadium || "-"}<br>
           <strong>Data / hora limite para registro do palpite:</strong> ${formatLockDate(match.date)}<br>
+          <strong>Status:</strong> ${match.status || "scheduled"}<br>
           <strong>${resultText}</strong>
         </div>
 
-        ${match.admin ? `<div class="adminNotice">Dado inserido pelo administrador</div>` : ""}
+        ${match.adminOverride ? `<div class="adminNotice">Dado inserido pelo administrador</div>` : ""}
 
         <div class="scoreInputs">
           <input
             id="home_${match.id}"
             type="number"
             min="0"
-            placeholder="${match.home}"
             value="${prediction ? prediction.predictedHomeScore : ""}"
             ${locked ? "disabled" : ""}
           >
@@ -804,7 +1040,6 @@ async function loadMatches(){
             id="away_${match.id}"
             type="number"
             min="0"
-            placeholder="${match.away}"
             value="${prediction ? prediction.predictedAwayScore : ""}"
             ${locked ? "disabled" : ""}
           >
@@ -828,6 +1063,167 @@ async function loadMatches(){
   matchesDiv.innerHTML = html;
 }
 
+function loadChampionOptions(){
+
+  const select = document.getElementById("championSelect");
+
+  const teams = new Map();
+
+  matchesCache.forEach(match=>{
+    teams.set(match.home, match.homeCode);
+    teams.set(match.away, match.awayCode);
+  });
+
+  let html = `<option value="">Selecione o campeão</option>`;
+
+  Array.from(teams.keys()).sort().forEach(team=>{
+    html += `<option value="${team}">${team}</option>`;
+  });
+
+  select.innerHTML = html;
+}
+
+async function loadLastChampionPrediction(){
+
+  const box = document.getElementById("lastChampionPrediction");
+
+  if(!currentUser){
+    box.innerHTML = "Não há palpite registrado.";
+    return;
+  }
+
+  const ref = doc(db, "championPredictions", currentUser.id);
+  const snap = await getDoc(ref);
+
+  if(!snap.exists()){
+    box.innerHTML = `<strong>Último palpite:</strong><br>Não há palpite registrado.`;
+    return;
+  }
+
+  const data = snap.data();
+
+  box.innerHTML = `
+    <strong>Último palpite:</strong><br>
+    ${data.team}<br>
+    <small>Fase: ${data.phaseWhenSaved}</small><br>
+    <small>Bônus possível: ${data.bonusPointsIfCorrect} pontos</small><br>
+    <small>Registrado em: ${formatDate(data.updatedAt)}</small>
+  `;
+}
+
+window.saveChampionPrediction = async function(){
+
+  if(!currentUser) return;
+
+  const team = document.getElementById("championSelect").value;
+  const message = document.getElementById("championMessage");
+
+  if(!team){
+    message.innerHTML = `<div class="warning">Selecione uma seleção.</div>`;
+    return;
+  }
+
+  const current = getCurrentChampionBonus();
+
+  if(current.bonus === 0){
+    message.innerHTML = `<div class="warning">O prazo para palpite de campeão está encerrado.</div>`;
+    return;
+  }
+
+  const ref = doc(db, "championPredictions", currentUser.id);
+  const snap = await getDoc(ref);
+
+  if(snap.exists() && snap.data().team === team){
+    message.innerHTML = `<div class="success">Este palpite já estava registrado. Nada foi alterado.</div>`;
+    await loadLastChampionPrediction();
+    return;
+  }
+
+  const data = {
+    userId:currentUser.id,
+    userEmail:currentUser.email,
+    displayName:currentUser.displayName,
+    team,
+    phaseWhenSaved:current.phase,
+    bonusPointsIfCorrect:current.bonus,
+    updatedAt:new Date().toISOString()
+  };
+
+  await setDoc(ref, data, { merge:true });
+
+  await addDoc(collection(db, "championPredictionHistory"), {
+    ...data,
+    savedAt:new Date().toISOString()
+  });
+
+  message.innerHTML = `<div class="success">Palpite de campeão salvo com sucesso.</div>`;
+
+  await loadLastChampionPrediction();
+}
+
+window.recalculateRanking = async function(showAlert = true){
+
+  const usersSnap = await getDocs(collection(db, "users"));
+  const predictionsSnap = await getDocs(collection(db, "predictions"));
+  const championSnap = await getDocs(collection(db, "championPredictions"));
+
+  const userStats = {};
+
+  usersSnap.forEach(userDoc=>{
+    const user = userDoc.data();
+
+    userStats[userDoc.id] = {
+      totalPoints:0,
+      exactScores:0,
+      winnerHits:0,
+      championBonus:0
+    };
+  });
+
+  predictionsSnap.forEach(predDoc=>{
+    const prediction = predDoc.data();
+    const match = matchesCache.find(m=>m.id === prediction.matchId);
+
+    if(!match || !userStats[prediction.userId]) return;
+
+    const result = calculatePredictionPoints(prediction, match);
+
+    userStats[prediction.userId].totalPoints += result.points;
+
+    if(result.exact){
+      userStats[prediction.userId].exactScores += 1;
+    }
+
+    if(result.winner){
+      userStats[prediction.userId].winnerHits += 1;
+    }
+  });
+
+  championSnap.forEach(champDoc=>{
+    const champ = champDoc.data();
+
+    const championOfficial = null;
+
+    if(championOfficial && champ.team === championOfficial && userStats[champ.userId]){
+      userStats[champ.userId].championBonus = champ.bonusPointsIfCorrect;
+      userStats[champ.userId].totalPoints += champ.bonusPointsIfCorrect;
+    }
+  });
+
+  for(const userId of Object.keys(userStats)){
+    await setDoc(
+      doc(db, "users", userId),
+      userStats[userId],
+      { merge:true }
+    );
+  }
+
+  if(showAlert){
+    alert("Ranking recalculado.");
+    await loadRanking();
+  }
+}
+
 async function loadRanking(){
 
   const rankingDiv = document.getElementById("rankingList");
@@ -843,7 +1239,8 @@ async function loadRanking(){
       displayName:user.displayName || "Sem nome",
       totalPoints:user.totalPoints || 0,
       exactScores:user.exactScores || 0,
-      winnerHits:user.winnerHits || 0
+      winnerHits:user.winnerHits || 0,
+      championBonus:user.championBonus || 0
     });
   });
 
@@ -871,7 +1268,12 @@ async function loadRanking(){
     html += `
       <div class="rankingItem">
         <div>${medal} <strong>${index + 1}º - ${user.displayName}</strong></div>
-        <div>${user.totalPoints} pts · ${user.exactScores} exatos · ${user.winnerHits} vencedores</div>
+        <div>
+          ${user.totalPoints} pts ·
+          ${user.exactScores} exatos ·
+          ${user.winnerHits} vencedores ·
+          ${user.championBonus} bônus campeão
+        </div>
       </div>
     `;
   });
@@ -884,7 +1286,9 @@ function loadGroups(){
   const groupsDiv = document.getElementById("groupsList");
   const teams = {};
 
-  sampleMatches.forEach(match=>{
+  matchesCache.forEach(match=>{
+
+    if(!match.group) return;
 
     if(!teams[match.group]) teams[match.group] = {};
 
@@ -908,6 +1312,7 @@ function loadGroups(){
       }
     });
 
+    if(match.status !== "finished") return;
     if(match.homeScore === null || match.awayScore === null) return;
 
     const home = teams[match.group][match.home];
@@ -940,6 +1345,11 @@ function loadGroups(){
     home.goalDiff = home.goalsFor - home.goalsAgainst;
     away.goalDiff = away.goalsFor - away.goalsAgainst;
   });
+
+  if(Object.keys(teams).length === 0){
+    groupsDiv.innerHTML = "Nenhum grupo disponível ainda.";
+    return;
+  }
 
   let html = `<div class="groupGrid">`;
 
@@ -1013,11 +1423,12 @@ async function autoLogin(email){
     currentUser = {
       id:userDoc.id,
       email:userData.email,
-      displayName:userData.displayName
+      displayName:email === ADMIN_EMAIL ? ADMIN_NAME : userData.displayName,
+      isAdmin:email === ADMIN_EMAIL
     };
 
     document.getElementById("email").value = email;
-    openDashboard(userData.displayName);
+    openDashboard(currentUser.displayName);
   }
 }
 
