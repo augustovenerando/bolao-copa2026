@@ -1,0 +1,233 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Bolão Copa 2026</title>
+
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background:#f5f5f5;
+      margin:0;
+      padding:0;
+    }
+
+    .container{
+      max-width:400px;
+      margin:80px auto;
+      background:white;
+      padding:30px;
+      border-radius:12px;
+      box-shadow:0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:30px;
+    }
+
+    input{
+      width:100%;
+      padding:12px;
+      margin-bottom:15px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      font-size:16px;
+      box-sizing:border-box;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      background:#111827;
+      color:white;
+      border:none;
+      border-radius:8px;
+      font-size:16px;
+      cursor:pointer;
+    }
+
+    button:hover{
+      opacity:0.9;
+    }
+
+    #message{
+      margin-top:15px;
+      text-align:center;
+      color:#444;
+    }
+
+    #dashboard{
+      display:none;
+    }
+
+    .card{
+      background:#f9fafb;
+      padding:15px;
+      border-radius:10px;
+      margin-top:15px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div id="login">
+
+    <h1>Bolão Copa 2026</h1>
+
+    <input
+      type="email"
+      id="email"
+      placeholder="Seu e-mail"
+    >
+
+    <input
+      type="text"
+      id="displayName"
+      placeholder="Nome de exibição"
+      style="display:none;"
+    >
+
+    <button onclick="enterBolao()">
+      Entrar
+    </button>
+
+    <div id="message"></div>
+
+  </div>
+
+  <div id="dashboard">
+
+    <h1 id="welcome"></h1>
+
+    <div class="card">
+      <strong>Ranking:</strong>
+      <p>Em breve</p>
+    </div>
+
+    <div class="card">
+      <strong>Meus palpites:</strong>
+      <p>Em breve</p>
+    </div>
+
+  </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBe8zvoZA5R7ErCjBhLWM8oK6athl7pu-0",
+  authDomain: "bolao-copa-2026-9f20b.firebaseapp.com",
+  projectId: "bolao-copa-2026-9f20b",
+  storageBucket: "bolao-copa-2026-9f20b.firebasestorage.app",
+  messagingSenderId: "955726811414",
+  appId: "1:955726811414:web:8a4d82e90d4439a3e1c037"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+window.enterBolao = async function(){
+
+  const email =
+    document.getElementById("email").value.trim().toLowerCase();
+
+  const displayNameInput =
+    document.getElementById("displayName");
+
+  const displayName =
+    displayNameInput.value.trim();
+
+  const message =
+    document.getElementById("message");
+
+  if(!email){
+    message.innerText = "Digite um e-mail";
+    return;
+  }
+
+  const q = query(
+    collection(db, "users"),
+    where("email", "==", email)
+  );
+
+  const querySnapshot = await getDocs(q);
+
+  if(querySnapshot.empty){
+
+    if(displayNameInput.style.display === "none"){
+
+      displayNameInput.style.display = "block";
+
+      message.innerText =
+        "Novo usuário. Escolha um nome.";
+
+      return;
+    }
+
+    if(!displayName){
+
+      message.innerText =
+        "Digite um nome de exibição";
+
+      return;
+    }
+
+    await addDoc(collection(db, "users"), {
+      email,
+      displayName,
+      createdAt: new Date().toISOString(),
+      isAdmin:false
+    });
+
+    openDashboard(displayName);
+
+  }else{
+
+    const userData =
+      querySnapshot.docs[0].data();
+
+    openDashboard(userData.displayName);
+
+  }
+
+}
+
+function openDashboard(name){
+
+  document.getElementById("login").style.display = "none";
+
+  document.getElementById("dashboard").style.display = "block";
+
+  document.getElementById("welcome").innerText =
+    "Olá, " + name;
+
+}
+
+</script>
+
+</body>
+</html>
+```
