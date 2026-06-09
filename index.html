@@ -1,4 +1,4 @@
-!!!
+acvs
 
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -419,6 +419,81 @@
       padding:18px;
       border-radius:18px;
       margin-bottom:14px;
+      border:2px solid rgba(255,255,255,.45);
+    }
+
+    .publicGrid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:16px;
+    }
+
+    .publicMatchCard{
+      background:white;
+      border:2px solid #111;
+      border-radius:18px;
+      padding:14px;
+      margin-bottom:12px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .publicMatchCard::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:8px;
+      background:linear-gradient(90deg,var(--red),var(--orange),var(--purple),var(--blue),var(--cyan),var(--green),var(--yellow));
+    }
+
+    .publicTeams{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-top:8px;
+      font-weight:bold;
+    }
+
+    .publicTeam{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      width:42%;
+    }
+
+    .publicTeam.away{
+      justify-content:flex-end;
+      text-align:right;
+    }
+
+    .profileBox{
+      border:2px solid #111;
+      border-radius:18px;
+      padding:14px;
+      background:#f9fafb;
+      margin-bottom:20px;
+    }
+
+    .usersListBox{
+      max-height:320px;
+      overflow:auto;
+      background:white;
+      border-radius:14px;
+      border:1px solid #ddd;
+      padding:8px;
+    }
+
+    .userRow{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px;
+      border-bottom:1px solid #eee;
+      font-size:13px;
+      flex-wrap:wrap;
     }
 
     .loader{
@@ -507,6 +582,12 @@
         </div>
 
         <div>
+          <h3>Usuários cadastrados</h3>
+          <button onclick="loadAdminUsersList()" class="secondaryBtn">Atualizar lista</button>
+          <div id="adminUsersList" class="usersListBox smallText">Carregando usuários...</div>
+        </div>
+
+        <div>
           <h3>Status do sistema</h3>
           <div id="systemStatusBox" class="smallText">Carregando...</div>
         </div>
@@ -519,6 +600,14 @@
       </div>
 
       <div id="adminMessage"></div>
+    </div>
+
+    <div id="profilePanel" class="profileBox" style="display:none;">
+      <h3>Meu perfil</h3>
+      <p class="smallText">O e-mail não pode ser alterado. Você pode atualizar apenas o nome de exibição.</p>
+      <input type="text" id="profileDisplayName" />
+      <button onclick="updateDisplayName()">Salvar nome de exibição</button>
+      <div id="profileMessage"></div>
     </div>
 
     <div class="tabs">
@@ -628,14 +717,22 @@
         <p>Ranking, próximos jogos, últimos resultados e classificação dos grupos.</p>
       </div>
 
-      <h3>Ranking</h3>
-      <div id="publicRankingList">Carregando...</div>
+      <div class="publicGrid">
+        <div>
+          <h3>🏅 Ranking</h3>
+          <div id="publicRankingList">Carregando...</div>
+        </div>
 
-      <h3>Próximos jogos</h3>
-      <div id="publicNextMatches">Carregando...</div>
+        <div>
+          <h3>🗓️ Próximos 5 jogos</h3>
+          <div id="publicNextMatches">Carregando...</div>
+        </div>
 
-      <h3>Últimos resultados</h3>
-      <div id="publicLastResults">Carregando...</div>
+        <div>
+          <h3>✅ Últimos 5 encerrados</h3>
+          <div id="publicLastResults">Carregando...</div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -653,14 +750,15 @@
    O restante do bolão usa o modelo interno padronizado.
 ============================================================ */
 
-const APP_VERSION = "v2.0.0-pre-api-modular";
+const APP_VERSION = "v2.1.0-ajustes-ui-admin-api";
 const SCHEMA_VERSION = "1.0";
 
 const API_CONFIG = {
   provider:"rezarahiminia_worldcup2026_candidate",
   enabled:true,
-  // Endpoint placeholder. Validaremos/trocaremos na etapa específica da API.
-  matchesEndpoint:"https://raw.githubusercontent.com/rezarahiminia/worldcup2026/main/data/matches.json",
+  // Endpoint substituível: se a API mudar, altere apenas este valor e normalizeApiMatch().
+  // O endpoint atual é fallback/placeholder e será refinado na próxima etapa da API.
+  matchesEndpoint:"https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",
   fallbackMode:true
 };
 
@@ -1205,11 +1303,37 @@ function normalizeApiMatch(raw){
 function normalizeApiStatus(status){
   const s = normalizeString(status);
 
-  if(["finished","final","fulltime","ft","completed"].includes(s)) return "finished";
-  if(["live","inprogress","in_progress","playing"].includes(s)) return "live";
-  if(["scheduled","notstarted","not_started","fixture"].includes(s)) return "scheduled";
+  if(["finished","final","fulltime","ft","completed","encerrado"].includes(s)) return "finished";
+  if(["live","inprogress","in_progress","playing","ao vivo"].includes(s)) return "live";
+  if(["scheduled","notstarted","not_started","fixture","agendado"].includes(s)) return "scheduled";
 
   return "scheduled";
+}
+
+function statusLabel(status){
+  const labels = {
+    scheduled:"Agendado",
+    live:"Ao vivo",
+    finished:"Encerrado"
+  };
+
+  return labels[status] || "Agendado";
+}
+
+const PHASE_OPTIONS = [
+  "Fase de Grupos",
+  "16 avos",
+  "Oitavas",
+  "Quartas",
+  "Semifinal",
+  "Disputa de 3º lugar",
+  "Final"
+];
+
+function phaseSelectOptions(selectedPhase){
+  return PHASE_OPTIONS.map(phase =>
+    `<option value="${phase}" ${phase === selectedPhase ? "selected" : ""}>${phase}</option>`
+  ).join("");
 }
 
 function validateNormalizedMatch(match){
@@ -1377,6 +1501,9 @@ async function openDashboard(name){
 
   if(currentUser && currentUser.isAdmin){
     document.getElementById("adminPanel").style.display = "block";
+  }else if(currentUser){
+    document.getElementById("profilePanel").style.display = "block";
+    document.getElementById("profileDisplayName").value = currentUser.displayName || "";
   }
 
   await loadMatchesFromFirestore();
@@ -1388,11 +1515,83 @@ async function openDashboard(name){
   loadGroups();
   loadPublicScreen();
   loadSystemStatus();
+  if(currentUser && currentUser.isAdmin){
+    loadAdminUsersList();
+  }
 }
 
 window.logout = function(){
   localStorage.removeItem("bolaoEmail");
   location.reload();
+}
+
+window.updateDisplayName = async function(){
+  if(!currentUser || currentUser.isAdmin) return;
+
+  const input = document.getElementById("profileDisplayName");
+  const message = document.getElementById("profileMessage");
+  const newName = input.value.trim();
+
+  if(!newName){
+    message.innerHTML = `<div class="warning">Digite um nome de exibição.</div>`;
+    return;
+  }
+
+  if(newName.toUpperCase() === ADMIN_NAME){
+    message.innerHTML = `<div class="warning">Este nome é reservado.</div>`;
+    return;
+  }
+
+  await updateDoc(doc(db, COLLECTIONS.users, currentUser.id), {
+    displayName:newName,
+    updatedAt:new Date().toISOString()
+  });
+
+  currentUser.displayName = newName;
+  document.getElementById("welcomeText").innerText = `Olá, ${newName}`;
+  message.innerHTML = `<div class="success">Nome atualizado com sucesso.</div>`;
+
+  await logAdminAction("user_display_name_updated", {
+    userId:currentUser.id,
+    userEmail:currentUser.email,
+    newDisplayName:newName
+  });
+
+  await loadRanking();
+  loadPublicScreen();
+}
+
+window.loadAdminUsersList = async function(){
+  if(!currentUser || !currentUser.isAdmin) return;
+
+  const box = document.getElementById("adminUsersList");
+  const snap = await getDocs(collection(db, COLLECTIONS.users));
+
+  let users = [];
+
+  snap.forEach(docSnap=>{
+    const user = docSnap.data();
+    users.push({
+      id:docSnap.id,
+      displayName:user.displayName || "Sem nome",
+      email:user.email || "",
+      isAdmin:!!user.isAdmin
+    });
+  });
+
+  users.sort((a,b)=>a.displayName.localeCompare(b.displayName, "pt-BR"));
+
+  if(!users.length){
+    box.innerHTML = "Nenhum usuário cadastrado.";
+    return;
+  }
+
+  box.innerHTML = users.map(user=>`
+    <div class="userRow">
+      <div><strong>${user.displayName}</strong>${user.isAdmin ? " · ADMIN" : ""}</div>
+      <div>${user.email}</div>
+    </div>
+  `).join("");
 }
 
 window.openPublicMode = async function(){
@@ -1523,6 +1722,11 @@ window.savePrediction = async function(matchId){
 
   if(!currentUser){
     alert("Faça login para salvar palpite.");
+    return;
+  }
+
+  if(currentUser.isAdmin){
+    alert("O ADMIN não participa do bolão e não pode registrar palpites.");
     return;
   }
 
@@ -1663,7 +1867,7 @@ async function loadMatches(){
           <strong>Data:</strong> ${formatDate(match.date)}<br>
           <strong>Local:</strong> ${match.stadium || "-"} ${match.city ? "· " + match.city : ""}<br>
           <strong>Data / hora limite para registro do palpite:</strong> ${formatLockDate(match.date)}<br>
-          <span class="statusPill ${statusClass}">${match.status || "scheduled"}</span>
+          <span class="statusPill ${statusClass}">${statusLabel(match.status || "scheduled")}</span>
           <span class="statusPill">${predictionStatus}</span><br>
           <strong>${resultText}</strong>
         </div>
@@ -1677,7 +1881,7 @@ async function loadMatches(){
             type="number"
             min="0"
             value="${prediction ? prediction.predictedHomeScore : ""}"
-            ${locked || !currentUser ? "disabled" : ""}
+            ${locked || !currentUser || currentUser.isAdmin ? "disabled" : ""}
           >
 
           <strong>x</strong>
@@ -1687,12 +1891,12 @@ async function loadMatches(){
             type="number"
             min="0"
             value="${prediction ? prediction.predictedAwayScore : ""}"
-            ${locked || !currentUser ? "disabled" : ""}
+            ${locked || !currentUser || currentUser.isAdmin ? "disabled" : ""}
           >
         </div>
 
-        <button onclick="savePrediction('${match.internalId}')" ${locked || !currentUser ? "disabled" : ""}>
-          ${!currentUser ? "Faça login para palpitar" : locked ? "Palpite encerrado" : "Salvar Palpite"}
+        <button onclick="savePrediction('${match.internalId}')" ${locked || !currentUser || currentUser.isAdmin ? "disabled" : ""}>
+          ${currentUser && currentUser.isAdmin ? "ADMIN não participa" : !currentUser ? "Faça login para palpitar" : locked ? "Palpite encerrado" : "Salvar Palpite"}
         </button>
 
         <div class="lastPrediction">
@@ -1781,11 +1985,9 @@ function renderAdminEditBox(match){
 
         <div>
           <label>Fase</label>
-          <input
-            id="adminPhase_${match.internalId}"
-            type="text"
-            value="${match.phase || ""}"
-          >
+          <select id="adminPhase_${match.internalId}">
+            ${phaseSelectOptions(match.phase || "Fase de Grupos")}
+          </select>
         </div>
 
         <div>
@@ -1862,7 +2064,7 @@ window.saveAdminMatch = async function(matchId){
     return;
   }
 
-  const updatedData = {
+  const baseUpdate = {
     date:dateValue,
     stadium,
     city,
@@ -1872,13 +2074,33 @@ window.saveAdminMatch = async function(matchId){
     phase,
     homeScore,
     awayScore,
+    updatedAt:new Date().toISOString(),
+    schemaVersion:SCHEMA_VERSION
+  };
+
+  const changed =
+    String(match.date || "") !== String(dateValue || "") ||
+    String(match.stadium || "") !== String(stadium || "") ||
+    String(match.city || "") !== String(city || "") ||
+    String(match.country || "") !== String(country || "") ||
+    String(match.status || "") !== String(status || "") ||
+    String(match.group || "") !== String(group || "") ||
+    String(match.phase || "") !== String(phase || "") ||
+    (match.homeScore ?? null) !== homeScore ||
+    (match.awayScore ?? null) !== awayScore;
+
+  if(!changed){
+    alert("Nenhuma alteração detectada.");
+    return;
+  }
+
+  const updatedData = {
+    ...baseUpdate,
     adminOverride:true,
     validatedByAdmin:false,
     validationNotice:"Dado inserido pelo administrador",
     adminUpdatedAt:new Date().toISOString(),
-    adminUpdatedBy:currentUser.email,
-    updatedAt:new Date().toISOString(),
-    schemaVersion:SCHEMA_VERSION
+    adminUpdatedBy:currentUser.email
   };
 
   await setDoc(
@@ -2292,6 +2514,9 @@ window.recalculateRanking = async function(showAlert = true){
   const userStats = {};
 
   usersSnap.forEach(userDoc=>{
+    const user = userDoc.data();
+    if(user.isAdmin) return;
+
     userStats[userDoc.id] = {
       totalPoints:0,
       exactScores:0,
@@ -2370,6 +2595,8 @@ async function loadRanking(){
 
   querySnapshot.forEach(doc=>{
     const user = doc.data();
+
+    if(user.isAdmin) return;
 
     users.push({
       id:doc.id,
@@ -2597,18 +2824,45 @@ function loadPublicScreen(){
 
   if(nextBox){
     nextBox.innerHTML = nextMatches.map(m=>`
-      <div class="lastPrediction">
-        <strong>${m.home} x ${m.away}</strong><br>
-        ${formatDate(m.date)} · ${m.stadium || "-"}
+      <div class="publicMatchCard">
+        <div class="publicTeams">
+          <div class="publicTeam">
+            <img class="flag" src="${flagUrl(m.homeCode)}" alt="${m.home}">
+            <span>${m.home}</span>
+          </div>
+          <div class="vs">x</div>
+          <div class="publicTeam away">
+            <span>${m.away}</span>
+            <img class="flag" src="${flagUrl(m.awayCode)}" alt="${m.away}">
+          </div>
+        </div>
+        <div class="matchMeta">
+          <strong>${m.phase || "-"}</strong> · Grupo ${m.group || "-"}<br>
+          ${formatDate(m.date)}<br>
+          ${m.stadium || "-"} ${m.city ? "· " + m.city : ""}
+        </div>
       </div>
     `).join("") || "Sem próximos jogos cadastrados.";
   }
 
   if(resultsBox){
     resultsBox.innerHTML = lastResults.map(m=>`
-      <div class="lastPrediction">
-        <strong>${m.home} ${m.homeScore} x ${m.awayScore} ${m.away}</strong><br>
-        ${m.phase || "-"} · ${formatDate(m.date)}
+      <div class="publicMatchCard">
+        <div class="publicTeams">
+          <div class="publicTeam">
+            <img class="flag" src="${flagUrl(m.homeCode)}" alt="${m.home}">
+            <span>${m.home}</span>
+          </div>
+          <div class="vs">${m.homeScore} x ${m.awayScore}</div>
+          <div class="publicTeam away">
+            <span>${m.away}</span>
+            <img class="flag" src="${flagUrl(m.awayCode)}" alt="${m.away}">
+          </div>
+        </div>
+        <div class="matchMeta">
+          <strong>${statusLabel(m.status)}</strong> · ${m.phase || "-"}<br>
+          ${formatDate(m.date)}
+        </div>
       </div>
     `).join("") || "Sem resultados cadastrados.";
   }
