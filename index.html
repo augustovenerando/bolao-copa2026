@@ -1,11 +1,10 @@
-'h
+---
 
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>Bolão Copa 2026</title>
 
   <style>
@@ -23,7 +22,6 @@
       --lime:#b2f000;
       --yellow:#eaff2e;
       --navy:#242b7f;
-      --dark-green:#005846;
       --black:#050505;
       --white:#ffffff;
     }
@@ -38,7 +36,6 @@
       background-size:cover;
       background-position:center;
       background-attachment:fixed;
-      color:var(--black);
     }
 
     .container{
@@ -89,19 +86,7 @@
       height:12px;
       border-radius:999px;
       margin-top:18px;
-      background:linear-gradient(
-        90deg,
-        var(--dark-red),
-        var(--red),
-        var(--orange),
-        var(--purple),
-        var(--lilac),
-        var(--blue),
-        var(--cyan),
-        var(--green),
-        var(--lime),
-        var(--yellow)
-      );
+      background:linear-gradient(90deg,var(--red),var(--orange),var(--purple),var(--blue),var(--cyan),var(--green),var(--yellow));
     }
 
     .card{
@@ -131,8 +116,6 @@
       background:var(--black);
       color:white;
     }
-
-    button:hover{ opacity:.9; }
 
     button:disabled{
       background:#999;
@@ -197,28 +180,17 @@
       overflow:hidden;
     }
 
-    .match::before{
-      content:"";
+    .countryBar{
       position:absolute;
-      left:0;
       top:0;
+      left:0;
       width:100%;
       height:8px;
-      background:linear-gradient(
-        90deg,
-        var(--red),
-        var(--orange),
-        var(--purple),
-        var(--blue),
-        var(--cyan),
-        var(--green),
-        var(--yellow)
-      );
     }
 
     .matchMeta{
       font-size:13px;
-      margin-top:8px;
+      margin-top:14px;
       color:#444;
       line-height:1.5;
     }
@@ -379,11 +351,7 @@
         <span class="badge">FIFA World Cup 2026</span>
       </div>
 
-      <img
-        class="logo"
-        alt="Logo Copa 2026"
-        src="https://upload.wikimedia.org/wikipedia/pt/d/d7/Logo_copa_2026.png"
-      />
+      <img class="logo" alt="Logo Copa 2026" src="https://upload.wikimedia.org/wikipedia/pt/d/d7/Logo_copa_2026.png" />
     </div>
 
     <div class="paletteBar"></div>
@@ -394,12 +362,7 @@
 
     <input type="email" id="email" placeholder="Seu e-mail" />
 
-    <input
-      type="text"
-      id="displayName"
-      placeholder="Nome de exibição"
-      style="display:none;"
-    />
+    <input type="text" id="displayName" placeholder="Nome de exibição" style="display:none;" />
 
     <button onclick="enterBolao()">Entrar</button>
 
@@ -444,10 +407,7 @@
 
 <script type="module">
 
-import {
-  initializeApp
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
   getFirestore,
@@ -455,7 +415,10 @@ import {
   query,
   where,
   getDocs,
-  addDoc
+  addDoc,
+  doc,
+  getDoc,
+  setDoc
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -471,6 +434,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+let currentUser = null;
+
+const teamColors = {
+  "Brasil":["#009739","#ffdf00"],
+  "Argentina":["#74acdf","#ffffff"],
+  "França":["#0055a4","#ef4135"],
+  "Espanha":["#c60b1e","#ffc400"],
+  "Inglaterra":["#ffffff","#cf142b"],
+  "Portugal":["#006600","#ff0000"],
+  "Alemanha":["#000000","#dd0000"],
+  "Uruguai":["#75aadb","#fcd116"]
+};
+
 const sampleMatches = [
   {
     id:"m1",
@@ -484,8 +460,7 @@ const sampleMatches = [
     stadium:"Estádio Azteca, Cidade do México",
     homeScore:null,
     awayScore:null,
-    admin:false,
-    lastPrediction:null
+    admin:false
   },
   {
     id:"m2",
@@ -499,8 +474,7 @@ const sampleMatches = [
     stadium:"MetLife Stadium, Nova York/Nova Jersey",
     homeScore:2,
     awayScore:1,
-    admin:false,
-    lastPrediction:"França 2 x 1 Espanha"
+    admin:false
   },
   {
     id:"m3",
@@ -514,8 +488,7 @@ const sampleMatches = [
     stadium:"SoFi Stadium, Los Angeles",
     homeScore:1,
     awayScore:1,
-    admin:true,
-    lastPrediction:null
+    admin:true
   },
   {
     id:"m4",
@@ -529,8 +502,7 @@ const sampleMatches = [
     stadium:"AT&T Stadium, Dallas",
     homeScore:0,
     awayScore:2,
-    admin:false,
-    lastPrediction:"Argentina 1 x 2 Espanha"
+    admin:false
   },
   {
     id:"m5",
@@ -544,8 +516,7 @@ const sampleMatches = [
     stadium:"Hard Rock Stadium, Miami",
     homeScore:3,
     awayScore:2,
-    admin:false,
-    lastPrediction:null
+    admin:false
   },
   {
     id:"m6",
@@ -559,8 +530,7 @@ const sampleMatches = [
     stadium:"BMO Field, Toronto",
     homeScore:1,
     awayScore:1,
-    admin:false,
-    lastPrediction:"Alemanha 2 x 1 Uruguai"
+    admin:false
   }
 ];
 
@@ -576,11 +546,7 @@ window.enterBolao = async function(){
     return;
   }
 
-  const q = query(
-    collection(db, "users"),
-    where("email", "==", email)
-  );
-
+  const q = query(collection(db, "users"), where("email", "==", email));
   const querySnapshot = await getDocs(q);
 
   if(querySnapshot.empty){
@@ -596,24 +562,36 @@ window.enterBolao = async function(){
       return;
     }
 
-    await addDoc(
-      collection(db, "users"),
-      {
-        email,
-        displayName,
-        createdAt:new Date().toISOString(),
-        isAdmin:false,
-        totalPoints:0,
-        exactScores:0,
-        winnerHits:0
-      }
-    );
+    const newUserRef = await addDoc(collection(db, "users"), {
+      email,
+      displayName,
+      createdAt:new Date().toISOString(),
+      isAdmin:false,
+      totalPoints:0,
+      exactScores:0,
+      winnerHits:0
+    });
+
+    currentUser = {
+      id:newUserRef.id,
+      email,
+      displayName
+    };
 
     localStorage.setItem("bolaoEmail", email);
     openDashboard(displayName);
 
   }else{
-    const userData = querySnapshot.docs[0].data();
+
+    const userDoc = querySnapshot.docs[0];
+    const userData = userDoc.data();
+
+    currentUser = {
+      id:userDoc.id,
+      email:userData.email,
+      displayName:userData.displayName
+    };
+
     localStorage.setItem("bolaoEmail", email);
     openDashboard(userData.displayName);
   }
@@ -635,15 +613,8 @@ window.logout = function(){
 }
 
 window.showScreen = function(screenId, btn){
-
-  document.querySelectorAll(".screen").forEach(screen=>{
-    screen.classList.remove("active");
-  });
-
-  document.querySelectorAll(".tabBtn").forEach(button=>{
-    button.classList.remove("active");
-  });
-
+  document.querySelectorAll(".screen").forEach(screen=>screen.classList.remove("active"));
+  document.querySelectorAll(".tabBtn").forEach(button=>button.classList.remove("active"));
   document.getElementById(screenId).classList.add("active");
   btn.classList.add("active");
 }
@@ -653,24 +624,116 @@ function flagUrl(code){
 }
 
 function formatDate(dateString){
-  const date = new Date(dateString);
+  return new Date(dateString).toLocaleString("pt-BR", {
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+}
 
-  return date.toLocaleString(
-    "pt-BR",
-    {
-      day:"2-digit",
-      month:"2-digit",
-      year:"numeric",
-      hour:"2-digit",
-      minute:"2-digit"
-    }
-  );
+function getLockDate(dateString){
+  return new Date(new Date(dateString).getTime() - 60 * 60 * 1000);
+}
+
+function formatLockDate(dateString){
+  return getLockDate(dateString).toLocaleString("pt-BR", {
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
 }
 
 function isLocked(dateString){
-  const matchDate = new Date(dateString);
-  const lockDate = new Date(matchDate.getTime() - 60 * 60 * 1000);
-  return new Date() >= lockDate;
+  return new Date() >= getLockDate(dateString);
+}
+
+function countryBar(home, away){
+  const h = teamColors[home] || ["#111111","#cccccc"];
+  const a = teamColors[away] || ["#cccccc","#111111"];
+
+  return `linear-gradient(
+    90deg,
+    ${h[0]} 0%,
+    ${h[1]} 24%,
+    #ffffff 50%,
+    ${a[0]} 76%,
+    ${a[1]} 100%
+  )`;
+}
+
+async function getPrediction(matchId){
+  if(!currentUser) return null;
+
+  const predictionId = `${currentUser.id}_${matchId}`;
+  const predictionRef = doc(db, "predictions", predictionId);
+  const predictionSnap = await getDoc(predictionRef);
+
+  if(predictionSnap.exists()){
+    return predictionSnap.data();
+  }
+
+  return null;
+}
+
+window.savePrediction = async function(matchId){
+
+  const match = sampleMatches.find(m=>m.id === matchId);
+
+  if(!match) return;
+
+  if(isLocked(match.date)){
+    alert("O prazo para registrar palpite deste jogo já encerrou.");
+    return;
+  }
+
+  const homeInput = document.getElementById(`home_${matchId}`);
+  const awayInput = document.getElementById(`away_${matchId}`);
+
+  const homeScore = Number(homeInput.value);
+  const awayScore = Number(awayInput.value);
+
+  if(homeInput.value === "" || awayInput.value === "" || homeScore < 0 || awayScore < 0){
+    alert("Preencha o placar completo do palpite.");
+    return;
+  }
+
+  const predictionId = `${currentUser.id}_${matchId}`;
+
+  const predictionData = {
+    userId:currentUser.id,
+    userEmail:currentUser.email,
+    displayName:currentUser.displayName,
+    matchId,
+    homeTeam:match.home,
+    awayTeam:match.away,
+    predictedHomeScore:homeScore,
+    predictedAwayScore:awayScore,
+    updatedAt:new Date().toISOString(),
+    matchDate:match.date,
+    lockDate:getLockDate(match.date).toISOString()
+  };
+
+  await setDoc(
+    doc(db, "predictions", predictionId),
+    predictionData,
+    { merge:true }
+  );
+
+  await addDoc(
+    collection(db, "predictionHistory"),
+    {
+      ...predictionData,
+      savedAt:new Date().toISOString()
+    }
+  );
+
+  alert("Palpite salvo com sucesso.");
+
+  loadMatches();
 }
 
 async function loadMatches(){
@@ -679,9 +742,10 @@ async function loadMatches(){
 
   let html = `<div class="matchesGrid">`;
 
-  sampleMatches.forEach(match=>{
+  for(const match of sampleMatches){
 
     const locked = isLocked(match.date);
+    const prediction = await getPrediction(match.id);
 
     const resultText =
       match.homeScore === null
@@ -689,12 +753,14 @@ async function loadMatches(){
         : `Resultado: ${match.homeScore} x ${match.awayScore}`;
 
     const lastPredictionText =
-      match.lastPrediction
-        ? match.lastPrediction
+      prediction
+        ? `${match.home} ${prediction.predictedHomeScore} x ${prediction.predictedAwayScore} ${match.away}<br><small>Registrado em: ${formatDate(prediction.updatedAt)}</small>`
         : "Não há palpite registrado";
 
     html += `
       <div class="match">
+
+        <div class="countryBar" style="background:${countryBar(match.home, match.away)};"></div>
 
         <div class="teamsCompact">
 
@@ -716,6 +782,7 @@ async function loadMatches(){
           <strong>${match.phase}</strong> · Grupo ${match.group}<br>
           <strong>Data:</strong> ${formatDate(match.date)}<br>
           <strong>Local:</strong> ${match.stadium}<br>
+          <strong>Data / hora limite para registro do palpite:</strong> ${formatLockDate(match.date)}<br>
           <strong>${resultText}</strong>
         </div>
 
@@ -723,23 +790,27 @@ async function loadMatches(){
 
         <div class="scoreInputs">
           <input
+            id="home_${match.id}"
             type="number"
             min="0"
             placeholder="${match.home}"
+            value="${prediction ? prediction.predictedHomeScore : ""}"
             ${locked ? "disabled" : ""}
           >
 
           <strong>x</strong>
 
           <input
+            id="away_${match.id}"
             type="number"
             min="0"
             placeholder="${match.away}"
+            value="${prediction ? prediction.predictedAwayScore : ""}"
             ${locked ? "disabled" : ""}
           >
         </div>
 
-        <button ${locked ? "disabled" : ""}>
+        <button onclick="savePrediction('${match.id}')" ${locked ? "disabled" : ""}>
           ${locked ? "Palpite encerrado" : "Salvar Palpite"}
         </button>
 
@@ -750,7 +821,7 @@ async function loadMatches(){
 
       </div>
     `;
-  });
+  }
 
   html += `</div>`;
 
@@ -760,7 +831,6 @@ async function loadMatches(){
 async function loadRanking(){
 
   const rankingDiv = document.getElementById("rankingList");
-
   const q = query(collection(db, "users"));
   const querySnapshot = await getDocs(q);
 
@@ -800,15 +870,8 @@ async function loadRanking(){
 
     html += `
       <div class="rankingItem">
-        <div>
-          ${medal} <strong>${index + 1}º - ${user.displayName}</strong>
-        </div>
-
-        <div>
-          ${user.totalPoints} pts ·
-          ${user.exactScores} exatos ·
-          ${user.winnerHits} vencedores
-        </div>
+        <div>${medal} <strong>${index + 1}º - ${user.displayName}</strong></div>
+        <div>${user.totalPoints} pts · ${user.exactScores} exatos · ${user.winnerHits} vencedores</div>
       </div>
     `;
   });
@@ -819,14 +882,11 @@ async function loadRanking(){
 function loadGroups(){
 
   const groupsDiv = document.getElementById("groupsList");
-
   const teams = {};
 
   sampleMatches.forEach(match=>{
 
-    if(!teams[match.group]){
-      teams[match.group] = {};
-    }
+    if(!teams[match.group]) teams[match.group] = {};
 
     [match.home, match.away].forEach((teamName, index)=>{
 
@@ -848,9 +908,7 @@ function loadGroups(){
       }
     });
 
-    if(match.homeScore === null || match.awayScore === null){
-      return;
-    }
+    if(match.homeScore === null || match.awayScore === null) return;
 
     const home = teams[match.group][match.home];
     const away = teams[match.group][match.away];
@@ -887,17 +945,15 @@ function loadGroups(){
 
   Object.keys(teams).sort().forEach(group=>{
 
-    const groupTeams =
-      Object.values(teams[group]).sort((a,b)=>{
-        if(b.points !== a.points) return b.points - a.points;
-        if(b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
-        return b.goalsFor - a.goalsFor;
-      });
+    const groupTeams = Object.values(teams[group]).sort((a,b)=>{
+      if(b.points !== a.points) return b.points - a.points;
+      if(b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+      return b.goalsFor - a.goalsFor;
+    });
 
     html += `
       <div>
         <h3>Grupo ${group}</h3>
-
         <table>
           <thead>
             <tr>
@@ -946,15 +1002,20 @@ if(savedEmail){
 
 async function autoLogin(email){
 
-  const q = query(
-    collection(db, "users"),
-    where("email", "==", email)
-  );
-
+  const q = query(collection(db, "users"), where("email", "==", email));
   const querySnapshot = await getDocs(q);
 
   if(!querySnapshot.empty){
-    const userData = querySnapshot.docs[0].data();
+
+    const userDoc = querySnapshot.docs[0];
+    const userData = userDoc.data();
+
+    currentUser = {
+      id:userDoc.id,
+      email:userData.email,
+      displayName:userData.displayName
+    };
+
     document.getElementById("email").value = email;
     openDashboard(userData.displayName);
   }
