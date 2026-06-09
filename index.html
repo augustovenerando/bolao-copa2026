@@ -1,6 +1,6 @@
-S2
+eee
 
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -366,6 +366,37 @@ S2
       background:#087f23;
     }
 
+    .userHeaderBox{
+      display:inline-block;
+      background:rgba(255,255,255,.94);
+      color:#050505;
+      padding:14px 18px;
+      border-radius:18px;
+      box-shadow:0 10px 24px rgba(0,0,0,.25);
+      border:2px solid rgba(255,255,255,.75);
+    }
+
+    .userHeaderBox h2{
+      margin:0;
+    }
+
+    .dangerBox{
+      margin-top:18px;
+      padding:16px;
+      border-radius:18px;
+      background:#fff1f2;
+      border:3px solid #dc2626;
+    }
+
+    .dangerBtn{
+      background:#dc2626;
+    }
+
+    .apiBtn{
+      background:#005846;
+      margin-top:8px;
+    }
+
     @media(max-width:600px){
       .container{ padding:14px; }
       h1{ font-size:28px; }
@@ -409,7 +440,7 @@ S2
   <div id="dashboard" style="display:none;">
 
     <div class="topBar">
-      <div>
+      <div class="userHeaderBox">
         <h2 id="welcomeText"></h2>
         <span class="badge">Seu painel do bolão</span>
       </div>
@@ -423,7 +454,19 @@ S2
         Use este painel para importar jogos de teste e recalcular o ranking.
       </p>
       <button onclick="importTestMatches()">Importar Jogos de Teste</button>
+      <button class="apiBtn" onclick="syncWorldCupApi()">Sincronizar API da Copa</button>
       <button onclick="recalculateRanking()" style="margin-top:8px;">Recalcular Ranking</button>
+
+      <div class="dangerBox">
+        <h3>Apagar cadastro</h3>
+        <p class="smallText">
+          Esta ação apaga o cadastro, palpites, histórico de palpites, palpite de campeão e histórico de campeão do e-mail informado.
+        </p>
+        <input type="email" id="deleteUserEmail" placeholder="E-mail do participante" />
+        <button onclick="findUserToDelete()">Buscar cadastro</button>
+        <div id="deleteUserPreview" class="smallText" style="margin-top:10px;"></div>
+      </div>
+
       <div id="adminMessage"></div>
     </div>
 
@@ -488,6 +531,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   orderBy
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -545,6 +589,54 @@ const teamColors = {
   "Suécia":["#fecc00","#006aa7"],
   "Suíça":["#ff0000","#ffffff"],
   "Uruguai":["#75aadb"]
+};
+
+const apiNameToPt = {
+  "Germany":"Alemanha",
+  "Saudi Arabia":"Arábia Saudita",
+  "Algeria":"Argélia",
+  "Argentina":"Argentina",
+  "Australia":"Austrália",
+  "Austria":"Áustria",
+  "Belgium":"Bélgica",
+  "Brazil":"Brasil",
+  "Cape Verde":"Cabo Verde",
+  "Canada":"Canadá",
+  "Qatar":"Catar",
+  "Colombia":"Colômbia",
+  "South Korea":"Coreia do Sul",
+  "Korea Republic":"Coreia do Sul",
+  "Ivory Coast":"Costa do Marfim",
+  "Côte d'Ivoire":"Costa do Marfim",
+  "Croatia":"Croácia",
+  "Ecuador":"Equador",
+  "Spain":"Espanha",
+  "United States":"Estados Unidos",
+  "USA":"Estados Unidos",
+  "France":"França",
+  "Ghana":"Gana",
+  "Netherlands":"Holanda",
+  "England":"Inglaterra",
+  "Iran":"Irã",
+  "Japan":"Japão",
+  "Morocco":"Marrocos",
+  "Mexico":"México",
+  "Norway":"Noruega",
+  "Panama":"Panamá",
+  "Paraguay":"Paraguai",
+  "Portugal":"Portugal",
+  "Senegal":"Senegal",
+  "Sweden":"Suécia",
+  "Switzerland":"Suíça",
+  "Uruguay":"Uruguai"
+};
+
+const apiCodeToFlagcdn = {
+  "ARG":"ar", "AUS":"au", "AUT":"at", "BEL":"be", "BRA":"br", "CAN":"ca", "COL":"co",
+  "CRO":"hr", "ECU":"ec", "ENG":"gb-eng", "FRA":"fr", "GER":"de", "GHA":"gh", "IRN":"ir",
+  "JPN":"jp", "KOR":"kr", "MAR":"ma", "MEX":"mx", "NED":"nl", "PAN":"pa", "PAR":"py",
+  "POR":"pt", "QAT":"qa", "KSA":"sa", "SEN":"sn", "ESP":"es", "SUI":"ch", "URU":"uy",
+  "USA":"us", "ALG":"dz", "CPV":"cv", "CIV":"ci", "SWE":"se"
 };
 
 const testMatches = [
@@ -912,6 +1004,273 @@ window.importTestMatches = async function(){
   await loadMatchesFromFirestore();
   loadChampionOptions();
   loadGroups();
+}
+
+
+function extractApiArray(data){
+  if(Array.isArray(data)) return data;
+  if(Array.isArray(data?.data)) return data.data;
+  if(Array.isArray(data?.games)) return data.games;
+  if(Array.isArray(data?.matches)) return data.matches;
+  if(Array.isArray(data?.results)) return data.results;
+  return [];
+}
+
+function ptTeamName(value){
+  if(!value) return "A definir";
+  if(typeof value === "string") return apiNameToPt[value] || value;
+  const raw = value.name_en || value.name || value.team || value.country || value.title || "A definir";
+  return apiNameToPt[raw] || raw;
+}
+
+function teamCodeFromApi(value){
+  if(!value) return "un";
+  const raw = value.fifa_code || value.code || value.iso2 || value.flagCode || value.country_code || "";
+  const upper = String(raw).toUpperCase();
+  if(apiCodeToFlagcdn[upper]) return apiCodeToFlagcdn[upper];
+  if(String(raw).length === 2) return String(raw).toLowerCase();
+  return "un";
+}
+
+function normalizeApiStatus(value){
+  const status = String(value || "scheduled").toLowerCase();
+  if(status.includes("finish") || status.includes("ended") || status.includes("full")) return "finished";
+  if(status.includes("live") || status.includes("progress") || status.includes("playing")) return "live";
+  return "scheduled";
+}
+
+function normalizeApiDate(game){
+  const raw =
+    game.date ||
+    game.datetime ||
+    game.match_date ||
+    game.matchDate ||
+    game.kickoff ||
+    game.time ||
+    game.start_time ||
+    game.startTime;
+
+  if(!raw) return "2026-06-11T16:00:00";
+
+  const parsed = new Date(raw);
+  if(!Number.isNaN(parsed.getTime())){
+    const pad = n => String(n).padStart(2, "0");
+    return `${parsed.getFullYear()}-${pad(parsed.getMonth()+1)}-${pad(parsed.getDate())}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
+  }
+
+  return String(raw);
+}
+
+function normalizeApiMatch(game, index){
+  const homeObj = game.home_team || game.homeTeam || game.team1 || game.home || game.localteam || game.team_a;
+  const awayObj = game.away_team || game.awayTeam || game.team2 || game.away || game.visitorteam || game.team_b;
+
+  const home = ptTeamName(homeObj);
+  const away = ptTeamName(awayObj);
+
+  const homeScoreRaw = game.home_score ?? game.homeScore ?? game.score1 ?? game.home_goals ?? game.goals_home;
+  const awayScoreRaw = game.away_score ?? game.awayScore ?? game.score2 ?? game.away_goals ?? game.goals_away;
+
+  const homeScore = homeScoreRaw === undefined || homeScoreRaw === null || homeScoreRaw === "" ? null : Number(homeScoreRaw);
+  const awayScore = awayScoreRaw === undefined || awayScoreRaw === null || awayScoreRaw === "" ? null : Number(awayScoreRaw);
+
+  return {
+    id:String(game.id || game._id || game.match_id || game.game_id || `api_${index + 1}`),
+    group:String(game.group || game.group_name || game.groupName || "").replace("Group ", "") || null,
+    phase:game.phase || game.stage || game.round || "Fase de Grupos",
+    home,
+    away,
+    homeCode:teamCodeFromApi(homeObj),
+    awayCode:teamCodeFromApi(awayObj),
+    date:normalizeApiDate(game),
+    stadium:game.stadium?.name || game.stadium_name || game.venue?.name || game.venue || game.location || "",
+    homeScore,
+    awayScore,
+    status:normalizeApiStatus(game.status || game.state || game.match_status),
+    adminOverride:false,
+    source:"worldcup26.ir",
+    apiRawUpdatedAt:new Date().toISOString()
+  };
+}
+
+window.syncWorldCupApi = async function(){
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode sincronizar a API.");
+    return;
+  }
+
+  const adminMessage = document.getElementById("adminMessage");
+  adminMessage.innerHTML = "Sincronizando API da Copa...";
+
+  try{
+    const response = await fetch("https://worldcup26.ir/get/games", {
+      method:"GET",
+      headers:{ "Accept":"application/json" }
+    });
+
+    if(!response.ok){
+      throw new Error(`Resposta da API: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const games = extractApiArray(data);
+
+    if(games.length === 0){
+      throw new Error("A API respondeu, mas não retornou uma lista de jogos reconhecida.");
+    }
+
+    let imported = 0;
+    let skippedByAdminOverride = 0;
+
+    for(let i = 0; i < games.length; i++){
+      const normalized = normalizeApiMatch(games[i], i);
+      const matchRef = doc(db, "matches", normalized.id);
+      const currentSnap = await getDoc(matchRef);
+
+      if(currentSnap.exists() && currentSnap.data().adminOverride){
+        skippedByAdminOverride++;
+        continue;
+      }
+
+      await setDoc(
+        matchRef,
+        {
+          ...normalized,
+          updatedAt:new Date().toISOString()
+        },
+        { merge:true }
+      );
+
+      imported++;
+    }
+
+    await addDoc(collection(db, "adminLogs"), {
+      adminUserId:currentUser.id,
+      adminEmail:currentUser.email,
+      type:"api_sync",
+      imported,
+      skippedByAdminOverride,
+      createdAt:new Date().toISOString()
+    });
+
+    adminMessage.innerHTML = `<div class="success">API sincronizada. Jogos atualizados: ${imported}. Mantidos por edição manual: ${skippedByAdminOverride}.</div>`;
+
+    await loadMatchesFromFirestore();
+    loadChampionOptions();
+    await recalculateRanking(false);
+    await loadRanking();
+    loadGroups();
+
+  }catch(error){
+    console.error(error);
+    adminMessage.innerHTML = `<div class="warning">Não foi possível sincronizar a API agora. O sistema continua funcionando com os dados do Firestore/manual. Detalhe: ${error.message}</div>`;
+  }
+}
+
+window.findUserToDelete = async function(){
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode apagar cadastros.");
+    return;
+  }
+
+  const email = document.getElementById("deleteUserEmail").value.trim().toLowerCase();
+  const preview = document.getElementById("deleteUserPreview");
+
+  if(!email){
+    preview.innerHTML = `<div class="warning">Digite um e-mail.</div>`;
+    return;
+  }
+
+  if(email === ADMIN_EMAIL){
+    preview.innerHTML = `<div class="warning">O cadastro ADMIN não pode ser apagado por esta tela.</div>`;
+    return;
+  }
+
+  const qUser = query(collection(db, "users"), where("email", "==", email));
+  const snap = await getDocs(qUser);
+
+  if(snap.empty){
+    preview.innerHTML = `<div class="warning">Nenhum cadastro encontrado para este e-mail.</div>`;
+    return;
+  }
+
+  const userDoc = snap.docs[0];
+  const user = userDoc.data();
+
+  preview.innerHTML = `
+    <div class="lastPrediction">
+      <strong>Cadastro encontrado:</strong><br>
+      Nome: ${user.displayName || "Sem nome"}<br>
+      E-mail: ${user.email}<br><br>
+      <button class="dangerBtn" onclick="deleteUserCompletely('${userDoc.id}', '${user.email}')">
+        Apagar cadastro e histórico
+      </button>
+    </div>
+  `;
+}
+
+async function deleteDocsByField(collectionName, fieldName, value){
+  const qDelete = query(collection(db, collectionName), where(fieldName, "==", value));
+  const snap = await getDocs(qDelete);
+
+  for(const item of snap.docs){
+    await deleteDoc(doc(db, collectionName, item.id));
+  }
+
+  return snap.docs.length;
+}
+
+window.deleteUserCompletely = async function(userId, email){
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode apagar cadastros.");
+    return;
+  }
+
+  if(email === ADMIN_EMAIL){
+    alert("O cadastro ADMIN não pode ser apagado.");
+    return;
+  }
+
+  const ok = confirm(`Tem certeza que deseja apagar o cadastro ${email} e todo o histórico de palpites? Esta ação não pode ser desfeita.`);
+
+  if(!ok) return;
+
+  const preview = document.getElementById("deleteUserPreview");
+  preview.innerHTML = "Apagando cadastro e histórico...";
+
+  const deletedPredictions = await deleteDocsByField("predictions", "userId", userId);
+  const deletedPredictionHistory = await deleteDocsByField("predictionHistory", "userId", userId);
+  const deletedChampionHistory = await deleteDocsByField("championPredictionHistory", "userId", userId);
+
+  const championRef = doc(db, "championPredictions", userId);
+  const championSnap = await getDoc(championRef);
+  let deletedChampion = 0;
+  if(championSnap.exists()){
+    await deleteDoc(championRef);
+    deletedChampion = 1;
+  }
+
+  await deleteDoc(doc(db, "users", userId));
+
+  await addDoc(collection(db, "adminLogs"), {
+    adminUserId:currentUser.id,
+    adminEmail:currentUser.email,
+    type:"user_delete",
+    deletedUserId:userId,
+    deletedEmail:email,
+    deletedPredictions,
+    deletedPredictionHistory,
+    deletedChampion,
+    deletedChampionHistory,
+    createdAt:new Date().toISOString()
+  });
+
+  preview.innerHTML = `<div class="success">Cadastro apagado com sucesso. Palpites: ${deletedPredictions}. Histórico: ${deletedPredictionHistory}. Histórico campeão: ${deletedChampionHistory}.</div>`;
+
+  document.getElementById("deleteUserEmail").value = "";
+
+  await recalculateRanking(false);
+  await loadRanking();
 }
 
 async function loadMatchesFromFirestore(){
