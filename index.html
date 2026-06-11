@@ -21,13 +21,19 @@
       --white:#ffffff;
       --soft:#f3f4f6;
     }
+
     body{
       margin:0;
       min-height:100vh;
       font-family:Arial, Helvetica, sans-serif;
-      background:#0a0a0a; 
+      background:
+        linear-gradient(rgba(0,0,0,.62), rgba(0,0,0,.62)),
+        url("https://s2-ge.glbimg.com/rUwiYSk9pAoPitC1iqWaj-0MW90=/0x0:1081x1081/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_bc8228b6673f488aa253bbcb03c80ec5/internal_photos/bs/2023/r/w/q8AvjjQuqFTdoUo361JA/fwc26-official-emblem-8.jpg");
+      background-size:cover;
+      background-position:center;
+      background-attachment:fixed;
       color:var(--black);
-    } 
+    }
 
     .container{
       max-width:1180px;
@@ -942,7 +948,7 @@
    O restante do bolão usa o modelo interno padronizado.
 ============================================================ */
 
-const APP_VERSION = "v2.4.0-zafronix-sync-duas-atualizacoes";
+const APP_VERSION = "v2.4.1-zafronix-auth-test";
 const SCHEMA_VERSION = "1.0";
 
 const API_CONFIG = {
@@ -1483,21 +1489,66 @@ function assertZafronixConfigured(){
 async function fetchZafronix(path){
   assertZafronixConfigured();
 
-  const response = await fetch(`${API_CONFIG.baseUrl}${path}`, {
-    method:"GET",
-    cache:"no-store",
-    headers:{
-      "Authorization":`Bearer ${API_CONFIG.apiKey}`,
-      "x-api-key":API_CONFIG.apiKey,
-      "Accept":"application/json"
-    }
-  });
+  const url = `${API_CONFIG.baseUrl}${path}`;
 
-  if(!response.ok){
-    throw new Error(`Falha Zafronix ${response.status} em ${path}`);
+  const attempts = [
+    {
+      name:"x-api-key",
+      options:{
+        method:"GET",
+        cache:"no-store",
+        headers:{
+          "x-api-key":API_CONFIG.apiKey,
+          "Accept":"application/json"
+        }
+      }
+    },
+    {
+      name:"Authorization Bearer",
+      options:{
+        method:"GET",
+        cache:"no-store",
+        headers:{
+          "Authorization":`Bearer ${API_CONFIG.apiKey}`,
+          "Accept":"application/json"
+        }
+      }
+    },
+    {
+      name:"api_key query string",
+      url:`${url}${url.includes("?") ? "&" : "?"}api_key=${encodeURIComponent(API_CONFIG.apiKey)}`,
+      options:{
+        method:"GET",
+        cache:"no-store",
+        headers:{
+          "Accept":"application/json"
+        }
+      }
+    }
+  ];
+
+  let lastError = null;
+
+  for(const attempt of attempts){
+    try{
+      const response = await fetch(attempt.url || url, attempt.options);
+
+      if(!response.ok){
+        lastError = new Error(`Tentativa ${attempt.name}: HTTP ${response.status}`);
+        continue;
+      }
+
+      return await response.json();
+
+    }catch(error){
+      lastError = new Error(`Tentativa ${attempt.name}: ${error.message}`);
+    }
   }
 
-  return await response.json();
+  throw new Error(
+    `${lastError?.message || "falha desconhecida"}. ` +
+    `Se a mensagem continuar como Failed to fetch, provavelmente é bloqueio de CORS da API no navegador.`
+  );
 }
 
 function extractZafronixArray(data, preferredKeys=[]){
