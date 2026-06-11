@@ -1052,7 +1052,7 @@
    O restante do bolão usa o modelo interno padronizado.
 ============================================================ */
 
-const APP_VERSION = "v2.7.0-jogos-filtros-admin-limpo";
+const APP_VERSION = "v2.7.1-filtros-jogos-fix";
 const SCHEMA_VERSION = "1.0";
 
 const API_CONFIG = {
@@ -4764,6 +4764,7 @@ async function openDashboard(name){
   }
 
   await loadMatchesFromFirestore();
+  setupMatchesFilters();
   loadChampionOptions();
   await loadLastChampionPrediction();
   await recalculateRanking(false);
@@ -4859,6 +4860,7 @@ window.openPublicMode = async function(){
   document.getElementById("adminPanel").style.display = "none";
 
   await loadMatchesFromFirestore();
+  setupMatchesFilters();
   await loadRanking();
   loadGroups();
   loadPublicScreen();
@@ -5261,6 +5263,10 @@ function renderMatchCard(match){
     </div>
   `;
 }
+
+// Necessário porque os filtros usam onchange no HTML e o script está em type="module".
+window.loadMatches = loadMatches;
+
 
 function renderAdminEditBox(match){
   return `
@@ -7083,6 +7089,18 @@ function loadBracket(){
     </div>
   `;
 }
+
+
+function setupMatchesFilters(){
+  ["matchesViewMode","matchesPastFilter","matchesUndefinedFilter"].forEach(id=>{
+    const element = document.getElementById(id);
+    if(element && !element.dataset.listenerAttached){
+      element.addEventListener("change", loadMatches);
+      element.dataset.listenerAttached = "true";
+    }
+  });
+}
+window.setupMatchesFilters = setupMatchesFilters;
 
 /* ============================================================
    FIM
