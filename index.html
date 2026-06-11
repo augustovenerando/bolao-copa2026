@@ -824,6 +824,7 @@
           
           <button onclick="recalculateRanking()" class="secondaryBtn">Recalcular Ranking</button>
           <button onclick="exportBackupCsv()" class="secondaryBtn">Exportar Backup CSV</button>
+          <button onclick="exportFullBackupJson()" class="secondaryBtn">Exportar backup completo JSON</button>
           <button onclick="restoreLastSyncSnapshot()" class="dangerBtn">Restaurar última sync</button>
         </div>
 
@@ -871,7 +872,7 @@
       <button class="tabBtn" onclick="showScreen('rankingScreen', this)">🏅 Ranking</button>
       <button class="tabBtn" onclick="showScreen('groupsScreen', this)">📊 Grupos</button>
       <button class="tabBtn" onclick="showScreen('bracketScreen', this)">🧩 Chaveamento</button>
-      <button class="tabBtn" onclick="showScreen('rulesScreen', this)">📜 Regras</button>
+      <button class="tabBtn" onclick="showScreen('rulesScreen', this)">📜 Regras e informações</button>
       <button class="tabBtn" onclick="showScreen('publicScreen', this)">📺 Público</button>
     </div>
 
@@ -960,56 +961,69 @@
     </div>
 
     <div id="rulesScreen" class="screen card rulesBox">
-      <h2>📜 Regras do Bolão</h2>
+      <h2>📜 Regras e informações do bolão</h2>
 
-      <h3>Pontuação por jogo</h3>
+      <h3>Como participar</h3>
       <p>
-        Placar exato: <strong>15 pontos</strong>. Acerto apenas do vencedor ou empate: <strong>5 pontos</strong>.
-        Erro do vencedor/empate: <strong>0 ponto</strong>.
+        Entre com seu e-mail e escolha um nome de exibição. O e-mail serve apenas para evitar cadastro duplicado.
+        O nome de exibição é o que aparece no ranking e pode ser alterado depois.
       </p>
 
-      <h3>Prazo dos palpites</h3>
+      <h3>Palpites dos jogos</h3>
       <p>
-        Cada palpite pode ser criado ou alterado até <strong>1 hora antes</strong> do início do jogo.
-        Depois do prazo, o palpite fica bloqueado.
+        Cada participante pode registrar um palpite de placar para cada jogo. O palpite pode ser alterado até
+        <strong>1 hora antes</strong> do início da partida. Depois disso, o jogo fica bloqueado.
       </p>
 
-      <h3>Prorrogação e pênaltis</h3>
+      <h3>Pontuação</h3>
       <p>
-        O resultado válido considera tempo normal, acréscimos e prorrogação.
-        Disputa por pênaltis não altera o placar do bolão: se o jogo for para os pênaltis, o resultado do bolão é empate.
+        <strong>15 pontos</strong> para placar exato. <strong>5 pontos</strong> para acerto do vencedor ou empate.
+        <strong>0 ponto</strong> se não acertar o vencedor/empate.
+      </p>
+
+      <h3>Resultado válido</h3>
+      <p>
+        O placar considerado inclui tempo normal, acréscimos e prorrogação. Pênaltis não contam para o placar do bolão.
+        Se o jogo for para os pênaltis, o resultado do bolão é o empate ao fim da prorrogação.
       </p>
 
       <h3>Palpite de campeão</h3>
       <p>
-        Antes do primeiro jogo: 100 pontos. Fase de grupos: 75. 16 avos: 60. Oitavas: 45.
-        Quartas: 30. Semifinal: 15. Final: 5.
+        O palpite de campeão pode ser feito até 1 hora antes da final. A pontuação bônus depende do momento do registro:
+        antes do primeiro jogo: 100 pts; fase de grupos: 75; 16 avos: 60; oitavas: 45; quartas: 30;
+        semifinal: 15; final: 5.
       </p>
 
       <h3>Desempates</h3>
       <p>
-        1) maior pontuação total; 2) mais placares exatos; 3) mais acertos de vencedor/empate;
-        4) quem registrou antes o palpite correto no jogo relacionado ao empate.
+        Em caso de empate no ranking, os critérios são: maior número de placares exatos; maior número de acertos de
+        vencedor/empate; e, se necessário, quem registrou antes o palpite correto relacionado ao empate.
       </p>
 
-      <h3>Alterações administrativas</h3>
+      <h3>Atualização dos dados</h3>
       <p>
-        Alterações feitas manualmente pelo ADMIN aparecem como <strong>“Dado inserido pelo administrador”</strong>.
-        Alterações sugeridas pela API e aprovadas pelo ADMIN aparecem como
-        <strong>“Alteração validada pelo administrador”</strong>.
+        A base oficial de jogos, datas, horários, grupos e estádios vem da tabela da FIFA e fica salva no banco do bolão.
+        Durante jogos ao vivo, a API auxiliar pode atualizar apenas status e placar, com no máximo duas atualizações por jogo:
+        uma no intervalo e outra no final. Os resultados ficam salvos localmente no Firebase.
+      </p>
+
+      <h3>Administração e auditoria</h3>
+      <p>
+        Alterações manuais aparecem como <strong>“Dado inserido pelo administrador”</strong>.
+        Alterações vindas da API e validadas aparecem como <strong>“Alteração validada pelo administrador”</strong>.
+        O sistema possui logs, snapshots e backup para auditoria.
       </p>
 
       <h3>Falha catastrófica</h3>
       <p>
-        Em caso de falha catastrófica que impeça a continuidade confiável e rastreável do bolão,
-        valerá como ranking final o último ranking da última rodada válida concluída,
-        desconsiderando pontuações bônus futuras. O administrador poderá validar os logs disponíveis
-        e gerar planilha CSV/Excel para continuidade manual, se necessário.
+        Se uma falha impedir a continuidade confiável e rastreável do bolão, valerá como ranking final o último ranking
+        da última rodada válida concluída, desconsiderando bônus futuros. O administrador poderá usar os backups e logs
+        para continuidade manual, se necessário.
       </p>
 
-      <h3>Privacidade</h3>
+      <h3>Versão</h3>
       <p>
-        O e-mail é usado apenas para evitar duplicidade de cadastro e identificar os palpites.
+        Esta é uma versão beta para testes. Ajustes visuais e operacionais podem ser feitos antes do lançamento oficial.
       </p>
     </div>
 
@@ -1052,7 +1066,7 @@
    O restante do bolão usa o modelo interno padronizado.
 ============================================================ */
 
-const APP_VERSION = "v2.7.1-filtros-jogos-fix";
+const APP_VERSION = "v2.8.0-lancamento-beta";
 const SCHEMA_VERSION = "1.0";
 
 const API_CONFIG = {
@@ -6098,16 +6112,29 @@ function loadChampionOptions(){
 
   const select = document.getElementById("championSelect");
 
+  if(!select) return;
+
   const teams = new Map();
 
   matchesCache.forEach(match=>{
-    teams.set(match.home, match.homeCode);
-    teams.set(match.away, match.awayCode);
+    const isGroupStage =
+      match.phase === "Fase de Grupos" ||
+      normalizeString(match.phase || "").includes("grupo");
+
+    if(!isGroupStage) return;
+
+    if(match.home && !isUndefinedTeamName(match.home)){
+      teams.set(match.home, match.homeCode);
+    }
+
+    if(match.away && !isUndefinedTeamName(match.away)){
+      teams.set(match.away, match.awayCode);
+    }
   });
 
   let html = `<option value="">Selecione o campeão</option>`;
 
-  Array.from(teams.keys()).sort().forEach(team=>{
+  Array.from(teams.keys()).sort((a,b)=>a.localeCompare(b, "pt-BR")).forEach(team=>{
     html += `<option value="${team}">${team}</option>`;
   });
 
@@ -6677,6 +6704,62 @@ window.deleteAllMatches = async function(){
   await loadMatchesFromFirestore();
   loadGroups();
   loadPublicScreen();
+}
+
+
+window.exportFullBackupJson = async function(){
+
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode exportar backup completo.");
+    return;
+  }
+
+  const collections = [
+    COLLECTIONS.users,
+    COLLECTIONS.matches,
+    COLLECTIONS.predictions,
+    COLLECTIONS.predictionHistory,
+    COLLECTIONS.championPredictions,
+    COLLECTIONS.championPredictionHistory,
+    COLLECTIONS.adminLogs,
+    COLLECTIONS.apiReviewQueue,
+    COLLECTIONS.syncSnapshots,
+    COLLECTIONS.systemStatus
+  ];
+
+  const backup = {
+    appVersion:APP_VERSION,
+    schemaVersion:SCHEMA_VERSION,
+    exportedAt:new Date().toISOString(),
+    exportedBy:currentUser.email,
+    collections:{}
+  };
+
+  for(const collectionName of collections){
+    const snap = await getDocs(collection(db, collectionName));
+    backup.collections[collectionName] = [];
+
+    snap.forEach(docSnap=>{
+      backup.collections[collectionName].push({
+        id:docSnap.id,
+        ...docSnap.data()
+      });
+    });
+  }
+
+  const now = new Date().toISOString().slice(0,19).replaceAll(":","-");
+  downloadTextFile(
+    `backup_completo_bolao_copa_2026_${now}.json`,
+    JSON.stringify(backup, null, 2),
+    "application/json;charset=utf-8"
+  );
+
+  await logAdminAction("full_backup_json_exported", {
+    collections,
+    exportedAt:backup.exportedAt
+  });
+
+  alert("Backup completo JSON exportado.");
 }
 
 window.exportBackupCsv = async function(){
