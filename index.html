@@ -672,6 +672,76 @@
       flex:none;
     }
 
+
+    .matchesToolbar{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+      gap:12px;
+      margin:14px 0 18px 0;
+      padding:14px;
+      background:#f9fafb;
+      border:1px solid #e5e7eb;
+      border-radius:18px;
+    }
+
+    .matchesToolbar label{
+      display:block;
+      font-size:12px;
+      font-weight:bold;
+      margin-bottom:6px;
+      color:#374151;
+    }
+
+    .matchesToolbar select{
+      margin:0;
+    }
+
+    .matchSection{
+      margin-bottom:26px;
+    }
+
+    .matchSectionHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:12px 14px;
+      border-radius:18px;
+      background:#050505;
+      color:white;
+      margin-bottom:12px;
+    }
+
+    .matchSectionHeader h3{
+      margin:0;
+      color:white;
+    }
+
+    .compactStandings{
+      margin-bottom:14px;
+      border:1px solid #ddd;
+      border-radius:16px;
+      overflow:hidden;
+      background:white;
+    }
+
+    .compactStandings h4{
+      margin:0;
+      padding:10px 12px;
+      background:#f3f4f6;
+      border-bottom:1px solid #ddd;
+    }
+
+    .match{
+      transition:transform .15s ease, box-shadow .15s ease;
+    }
+
+    .match:hover{
+      transform:translateY(-2px);
+      box-shadow:0 14px 34px rgba(0,0,0,.22);
+    }
+
     @media(max-width:600px){
       .container{ padding:14px; }
       h1{ font-size:28px; }
@@ -733,7 +803,7 @@
       <div class="adminGrid">
         <div>
           <h3>Operação</h3>
-          <button onclick="importTestMatches()">Importar Jogos de Teste</button>
+          
           <button onclick="importFifaOfficialBase()" class="adminBtn">Importar base oficial FIFA</button>
 
           <div class="apiActionBox">
@@ -744,14 +814,14 @@
             <button onclick="testZafronixConnection()" class="secondaryBtn">Testar conexão</button>
             <div id="zafronixKeyStatus" class="smallText"></div>
             <br>
-            <button onclick="importZafronixWorldCup()" class="adminBtn">Importar Copa 2026 (Zafronix - não recomendado)</button>
+            
             <button onclick="syncZafronixMatches()" class="adminBtn">Atualizar apenas resultados</button>
             <button onclick="syncZafronixPlannedLiveUpdates()" class="adminBtn">Rodar atualizações planejadas</button>
-            <button onclick="syncZafronixStandings()" class="adminBtn">Atualizar classificação</button>
-            <button onclick="syncZafronixBracket()" class="adminBtn">Atualizar chaveamento</button>
+            <button onclick="syncZafronixStandings()" class="adminBtn">Atualizar classificação FIFA</button>
+            <button onclick="syncZafronixBracket()" class="adminBtn">Atualizar chaveamento FIFA</button>
           </div>
-          <button onclick="deleteTestMatches()" class="dangerBtn">Limpar jogos de teste</button>
-          <button onclick="deleteAllMatches()" class="dangerBtn">Excluir todos os jogos</button>
+          
+          
           <button onclick="recalculateRanking()" class="secondaryBtn">Recalcular Ranking</button>
           <button onclick="exportBackupCsv()" class="secondaryBtn">Exportar Backup CSV</button>
           <button onclick="restoreLastSyncSnapshot()" class="dangerBtn">Restaurar última sync</button>
@@ -806,7 +876,39 @@
     </div>
 
     <div id="matchesScreen" class="screen active card">
-      <h2>⚽ Jogos e Palpites</h2>
+      <h2>⚽ Jogos</h2>
+
+      <div class="matchesToolbar">
+        <div>
+          <label>Visão</label>
+          <select id="matchesViewMode" onchange="loadMatches()">
+            <option value="date">Todos por data</option>
+            <option value="group">Por grupo</option>
+            <option value="round">Por rodada/fase</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Jogos encerrados</label>
+          <select id="matchesPastFilter" onchange="loadMatches()">
+            <option value="hide">Ocultar encerrados</option>
+            <option value="show">Mostrar encerrados</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Jogos indefinidos</label>
+          <select id="matchesUndefinedFilter" onchange="loadMatches()">
+            <option value="hide">Ocultar indefinidos</option>
+            <option value="show">Mostrar indefinidos</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="smallText">
+        Jogos indefinidos das fases eliminatórias ficam concentrados na aba Chaveamento. Aqui aparecem os jogos prontos para consulta e palpite.
+      </p>
+
       <div id="matchesList">Carregando jogos...</div>
     </div>
 
@@ -950,7 +1052,7 @@
    O restante do bolão usa o modelo interno padronizado.
 ============================================================ */
 
-const APP_VERSION = "v2.5.0-fifa-base-zafronix-resultados-performance";
+const APP_VERSION = "v2.7.0-jogos-filtros-admin-limpo";
 const SCHEMA_VERSION = "1.0";
 
 const API_CONFIG = {
@@ -3915,6 +4017,150 @@ function countryBar(home, away){
   )`;
 }
 
+
+function isUndefinedTeamName(name){
+  const n = normalizeString(name);
+  return (
+    !n ||
+    n === "a definir" ||
+    n === "tbd" ||
+    n === "to be determined" ||
+    n === "indefinido" ||
+    n.includes("vencedor") ||
+    n.includes("perdedor") ||
+    /^w\d+$/i.test(String(name || "")) ||
+    /^l\d+$/i.test(String(name || "")) ||
+    /^\d+[a-l]/i.test(String(name || ""))
+  );
+}
+
+function isUndefinedMatch(match){
+  return isUndefinedTeamName(match.home) || isUndefinedTeamName(match.away);
+}
+
+function getVisibleMatchesForFilters(){
+  const viewMode = document.getElementById("matchesViewMode")?.value || "date";
+  const pastFilter = document.getElementById("matchesPastFilter")?.value || "hide";
+  const undefinedFilter = document.getElementById("matchesUndefinedFilter")?.value || "hide";
+
+  const now = new Date();
+
+  return matchesCache
+    .filter(match=>{
+      if(undefinedFilter === "hide" && isUndefinedMatch(match)) return false;
+      if(pastFilter === "hide" && match.status === "finished") return false;
+      return true;
+    })
+    .sort((a,b)=>new Date(a.date) - new Date(b.date));
+}
+
+function getGroupStandingsData(group){
+  const teams = {};
+
+  matchesCache
+    .filter(match=>match.group === group)
+    .forEach(match=>{
+      [match.home, match.away].forEach((teamName, index)=>{
+        if(isUndefinedTeamName(teamName)) return;
+
+        const code = index === 0 ? match.homeCode : match.awayCode;
+
+        if(!teams[teamName]){
+          teams[teamName] = {
+            name:teamName,
+            code,
+            points:0,
+            played:0,
+            wins:0,
+            draws:0,
+            losses:0,
+            goalsFor:0,
+            goalsAgainst:0,
+            goalDiff:0
+          };
+        }
+      });
+
+      if(match.status !== "finished") return;
+      if(match.homeScore === null || match.awayScore === null) return;
+      if(isUndefinedTeamName(match.home) || isUndefinedTeamName(match.away)) return;
+
+      const home = teams[match.home];
+      const away = teams[match.away];
+
+      if(!home || !away) return;
+
+      home.played++;
+      away.played++;
+
+      home.goalsFor += match.homeScore;
+      home.goalsAgainst += match.awayScore;
+      away.goalsFor += match.awayScore;
+      away.goalsAgainst += match.homeScore;
+
+      if(match.homeScore > match.awayScore){
+        home.points += 3;
+        home.wins++;
+        away.losses++;
+      }else if(match.homeScore < match.awayScore){
+        away.points += 3;
+        away.wins++;
+        home.losses++;
+      }else{
+        home.points += 1;
+        away.points += 1;
+        home.draws++;
+        away.draws++;
+      }
+
+      home.goalDiff = home.goalsFor - home.goalsAgainst;
+      away.goalDiff = away.goalsFor - away.goalsAgainst;
+    });
+
+  return Object.values(teams).sort((a,b)=>{
+    if(b.points !== a.points) return b.points - a.points;
+    if(b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+    return b.goalsFor - a.goalsFor;
+  });
+}
+
+function renderCompactGroupStandings(group){
+  const standings = getGroupStandingsData(group);
+
+  if(!standings.length) return "";
+
+  return `
+    <div class="compactStandings">
+      <h4>Classificação do Grupo ${group}</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Seleção</th>
+            <th>J</th>
+            <th>Pts</th>
+            <th>SG</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${standings.map(team=>`
+            <tr>
+              <td>
+                <div class="teamCell">
+                  <img class="flag" src="${flagUrl(team.code)}" alt="${team.name}">
+                  ${team.name}
+                </div>
+              </td>
+              <td>${team.played}</td>
+              <td><strong>${team.points}</strong></td>
+              <td>${team.goalDiff}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function getMatchResultType(homeScore, awayScore){
   if(homeScore > awayScore) return "home";
   if(homeScore < awayScore) return "away";
@@ -4849,111 +5095,171 @@ async function loadMatches(){
     matchesDiv.innerHTML = `
       <div class="warning">
         Nenhum jogo cadastrado ainda.
-        ${currentUser && currentUser.isAdmin ? "Use o botão Importar Jogos de Teste na área do ADMIN." : ""}
+        ${currentUser && currentUser.isAdmin ? "Use o botão Importar base oficial FIFA na área do ADMIN." : ""}
       </div>
     `;
     return;
   }
 
-  let html = `<div class="matchesGrid">`;
+  const viewMode = document.getElementById("matchesViewMode")?.value || "date";
+  const visibleMatches = getVisibleMatchesForFilters();
 
-  for(const match of matchesCache){
+  if(!visibleMatches.length){
+    matchesDiv.innerHTML = `<div class="loader">Nenhum jogo encontrado para os filtros selecionados.</div>`;
+    return;
+  }
 
-    const locked = isLocked(match.date);
-    const prediction = await getPrediction(match.internalId);
-    const predictionStatus = getPredictionWindowStatus(match);
+  let html = "";
 
-    const resultText =
-      match.homeScore === null || match.awayScore === null
-        ? "Resultado ainda não registrado"
-        : `Resultado: ${match.homeScore} x ${match.awayScore}`;
+  if(viewMode === "group"){
+    const groups = Array.from(new Set(
+      visibleMatches
+        .filter(match=>match.group)
+        .map(match=>match.group)
+    )).sort();
 
-    const lastPredictionText =
-      prediction
-        ? `${match.home} ${prediction.predictedHomeScore} x ${prediction.predictedAwayScore} ${match.away}<br><small>Registrado em: ${formatDate(prediction.updatedAt)}</small>`
-        : "Não há palpite registrado";
+    groups.forEach(group=>{
+      const groupMatches = visibleMatches
+        .filter(match=>match.group === group)
+        .sort((a,b)=>new Date(a.date) - new Date(b.date));
 
-    const statusClass =
-      match.status === "finished" ? "green" :
-      match.status === "live" ? "red" :
-      locked ? "yellow" : "blue";
+      html += `
+        <div class="matchSection">
+          <div class="matchSectionHeader">
+            <h3>Grupo ${group}</h3>
+            <span>${groupMatches.length} jogos</span>
+          </div>
+          ${renderCompactGroupStandings(group)}
+          <div class="matchesGrid">
+            ${groupMatches.map(match=>renderMatchCard(match)).join("")}
+          </div>
+        </div>
+      `;
+    });
 
+  }else if(viewMode === "round"){
+    const phases = Array.from(new Set(
+      visibleMatches.map(match=>match.phase || "Sem fase")
+    ));
+
+    phases.forEach(phase=>{
+      const phaseMatches = visibleMatches
+        .filter(match=>(match.phase || "Sem fase") === phase)
+        .sort((a,b)=>new Date(a.date) - new Date(b.date));
+
+      html += `
+        <div class="matchSection">
+          <div class="matchSectionHeader">
+            <h3>${phase}</h3>
+            <span>${phaseMatches.length} jogos</span>
+          </div>
+          <div class="matchesGrid">
+            ${phaseMatches.map(match=>renderMatchCard(match)).join("")}
+          </div>
+        </div>
+      `;
+    });
+
+  }else{
     html += `
-      <div class="match">
-
-        <div class="countryBar" style="background:${countryBar(match.home, match.away)};"></div>
-
-        <div class="teamsCompact">
-
-          <div class="teamCompact">
-            <img class="flag" src="${flagUrl(match.homeCode)}" alt="${match.home}">
-            <span>${match.home}</span>
-          </div>
-
-          <div class="vs">x</div>
-
-          <div class="teamCompact away">
-            <span>${match.away}</span>
-            <img class="flag" src="${flagUrl(match.awayCode)}" alt="${match.away}">
-          </div>
-
+      <div class="matchSection">
+        <div class="matchSectionHeader">
+          <h3>Todos os jogos por data</h3>
+          <span>${visibleMatches.length} jogos</span>
         </div>
-
-        <div class="matchMeta">
-          <strong>${match.phase}</strong> · Grupo ${match.group || "-"}<br>
-          <strong>Data:</strong> ${formatDate(match.date)}<br>
-          <strong>Local:</strong> ${match.stadium || "-"} ${match.city ? "· " + match.city : ""}<br>
-          <strong>Data / hora limite para registro do palpite:</strong> ${formatLockDate(match.date)}<br>
-          <span class="statusPill ${statusClass}">${statusLabel(match.status || "scheduled")}</span>
-          <span class="statusPill">${predictionStatus}</span><br>
-          <strong>${resultText}</strong>
+        <div class="matchesGrid">
+          ${visibleMatches.map(match=>renderMatchCard(match)).join("")}
         </div>
-
-        ${match.adminOverride ? `<div class="adminNotice">Dado inserido pelo administrador</div>` : ""}
-        ${match.validatedByAdmin ? `<div class="validatedNotice">Alteração validada pelo administrador</div>` : ""}
-
-        <div class="scoreInputs">
-          <input
-            id="home_${match.internalId}"
-            type="number"
-            min="0"
-            value="${prediction ? prediction.predictedHomeScore : ""}"
-            ${locked || !currentUser || currentUser.isAdmin ? "disabled" : ""}
-          >
-
-          <strong>x</strong>
-
-          <input
-            id="away_${match.internalId}"
-            type="number"
-            min="0"
-            value="${prediction ? prediction.predictedAwayScore : ""}"
-            ${locked || !currentUser || currentUser.isAdmin ? "disabled" : ""}
-          >
-        </div>
-
-        <button onclick="savePrediction('${match.internalId}')" ${locked || !currentUser || currentUser.isAdmin ? "disabled" : ""}>
-          ${currentUser && currentUser.isAdmin ? "ADMIN não participa" : !currentUser ? "Faça login para palpitar" : locked ? "Palpite encerrado" : "Salvar Palpite"}
-        </button>
-
-        <div class="lastPrediction">
-          <strong>Último palpite:</strong><br>
-          ${lastPredictionText}
-        </div>
-
-        ${
-          currentUser && currentUser.isAdmin
-          ? renderAdminEditBox(match)
-          : ""
-        }
-
       </div>
     `;
   }
 
-  html += `</div>`;
-
   matchesDiv.innerHTML = html;
+}
+
+function renderMatchCard(match){
+  const locked = isLocked(match.date);
+  const prediction = currentUserPredictionsCache[match.internalId] || null;
+  const predictionStatus = getPredictionWindowStatus(match);
+
+  const resultText =
+    match.homeScore === null || match.awayScore === null
+      ? "Resultado ainda não registrado"
+      : `Resultado: ${match.homeScore} x ${match.awayScore}`;
+
+  const lastPredictionText =
+    prediction
+      ? `${match.home} ${prediction.predictedHomeScore} x ${prediction.predictedAwayScore} ${match.away}<br><small>Registrado em: ${formatDate(prediction.updatedAt)}</small>`
+      : "Não há palpite registrado";
+
+  const statusClass =
+    match.status === "finished" ? "green" :
+    match.status === "live" ? "red" :
+    locked ? "yellow" : "blue";
+
+  return `
+    <div class="match">
+      <div class="countryBar" style="background:${countryBar(match.home, match.away)};"></div>
+
+      <div class="teamsCompact">
+        <div class="teamCompact">
+          <img class="flag" src="${flagUrl(match.homeCode)}" alt="${match.home}">
+          <span>${match.home}</span>
+        </div>
+
+        <div class="vs">x</div>
+
+        <div class="teamCompact away">
+          <span>${match.away}</span>
+          <img class="flag" src="${flagUrl(match.awayCode)}" alt="${match.away}">
+        </div>
+      </div>
+
+      <div class="matchMeta">
+        <strong>${match.phase}</strong> ${match.group ? "· Grupo " + match.group : ""}<br>
+        <strong>Data:</strong> ${formatDate(match.date)}<br>
+        <strong>Local:</strong> ${match.stadium || "-"} ${match.city ? "· " + match.city : ""}<br>
+        <strong>Data / hora limite para registro do palpite:</strong> ${formatLockDate(match.date)}<br>
+        <span class="statusPill ${statusClass}">${statusLabel(match.status || "scheduled")}</span>
+        <span class="statusPill">${predictionStatus}</span><br>
+        <strong>${resultText}</strong>
+      </div>
+
+      ${match.adminOverride ? `<div class="adminNotice">Dado inserido pelo administrador</div>` : ""}
+      ${match.validatedByAdmin ? `<div class="validatedNotice">Alteração validada pelo administrador</div>` : ""}
+
+      <div class="scoreInputs">
+        <input
+          id="home_${match.internalId}"
+          type="number"
+          min="0"
+          value="${prediction ? prediction.predictedHomeScore : ""}"
+          ${locked || !currentUser || currentUser.isAdmin ? "disabled" : ""}
+        >
+
+        <strong>x</strong>
+
+        <input
+          id="away_${match.internalId}"
+          type="number"
+          min="0"
+          value="${prediction ? prediction.predictedAwayScore : ""}"
+          ${locked || !currentUser || currentUser.isAdmin ? "disabled" : ""}
+        >
+      </div>
+
+      <button onclick="savePrediction('${match.internalId}')" ${locked || !currentUser || currentUser.isAdmin ? "disabled" : ""}>
+        ${currentUser && currentUser.isAdmin ? "ADMIN não participa" : !currentUser ? "Faça login para palpitar" : locked ? "Palpite encerrado" : "Salvar Palpite"}
+      </button>
+
+      <div class="lastPrediction">
+        <strong>Último palpite:</strong><br>
+        ${lastPredictionText}
+      </div>
+
+      ${currentUser && currentUser.isAdmin ? renderAdminEditBox(match) : ""}
+    </div>
+  `;
 }
 
 function renderAdminEditBox(match){
