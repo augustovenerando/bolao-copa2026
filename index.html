@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Bolão Copa 2026!!!</title>
+  <title>Bolão Copa 2026 </title>
 
   <style>
     *{ box-sizing:border-box; }
@@ -26,12 +26,7 @@
       margin:0;
       min-height:100vh;
       font-family:Arial, Helvetica, sans-serif;
-      background:
-        linear-gradient(rgba(0,0,0,.62), rgba(0,0,0,.62)),
-        url("https://s2-ge.glbimg.com/rUwiYSk9pAoPitC1iqWaj-0MW90=/0x0:1081x1081/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_bc8228b6673f488aa253bbcb03c80ec5/internal_photos/bs/2023/r/w/q8AvjjQuqFTdoUo361JA/fwc26-official-emblem-8.jpg");
-      background-size:cover;
-      background-position:center;
-      background-attachment:fixed;
+      background:#000000;
       color:var(--black);
     }
 
@@ -739,6 +734,7 @@
         <div>
           <h3>Operação</h3>
           <button onclick="importTestMatches()">Importar Jogos de Teste</button>
+          <button onclick="importFifaOfficialBase()" class="adminBtn">Importar base oficial FIFA</button>
 
           <div class="apiActionBox">
             <h4>Zafronix API</h4>
@@ -748,8 +744,8 @@
             <button onclick="testZafronixConnection()" class="secondaryBtn">Testar conexão</button>
             <div id="zafronixKeyStatus" class="smallText"></div>
             <br>
-            <button onclick="importZafronixWorldCup()" class="adminBtn">Importar Copa 2026</button>
-            <button onclick="syncZafronixMatches()" class="adminBtn">Atualizar agora pela API</button>
+            <button onclick="importZafronixWorldCup()" class="adminBtn">Importar Copa 2026 (Zafronix - não recomendado)</button>
+            <button onclick="syncZafronixMatches()" class="adminBtn">Atualizar apenas resultados</button>
             <button onclick="syncZafronixPlannedLiveUpdates()" class="adminBtn">Rodar atualizações planejadas</button>
             <button onclick="syncZafronixStandings()" class="adminBtn">Atualizar classificação</button>
             <button onclick="syncZafronixBracket()" class="adminBtn">Atualizar chaveamento</button>
@@ -954,33 +950,38 @@
    O restante do bolão usa o modelo interno padronizado.
 ============================================================ */
 
-const APP_VERSION = "v2.4.3-zafronix-horario-brasilia";
+const APP_VERSION = "v2.5.0-fifa-base-zafronix-resultados-performance";
 const SCHEMA_VERSION = "1.0";
 
 const API_CONFIG = {
+  /*
+    ESTRATÉGIA OFICIAL DO BOLÃO
+
+    1) FIFA oficial = fonte para calendário/base:
+       - seleções
+       - grupos
+       - data/hora em Brasília
+       - estádio/cidade
+       - fase/chaveamento base
+
+    2) Zafronix = fonte auxiliar apenas para resultados:
+       - status
+       - gols
+       - resultado final
+       - advancedTeam, se disponível
+
+    3) Firestore = fonte da verdade:
+       - o site calcula ranking apenas com dados salvos no Firestore
+       - a API nunca sobrescreve data/hora/local/seleções/grupos automaticamente
+       - jogo encerrado alterado pela API vai para fila do ADMIN
+  */
   provider:"zafronix",
   enabled:true,
   baseUrl:"https://api.zafronix.com/fifa/worldcup/v1",
   year:2026,
-
-  /*
-    A chave pode ser salva pela interface ADMIN.
-    Alternativa: colar direto em apiKey abaixo.
-
-    Atenção: como estamos usando Firebase Spark + GitHub Pages,
-    esta chave ficará visível no código público do site.
-  */
-  apiKey:"",
-
-  /*
-    Regra definida:
-    - ADMIN pode sincronizar tudo manualmente pelo botão.
-    - Durante cada jogo, faremos no máximo 2 atualizações planejadas:
-      1) intervalo
-      2) final do jogo
-    - Tudo que vier da API é salvo no Firestore.
-    - O site calcula pontos apenas com dados salvos no Firestore.
-  */
+  apiKey:"COLE_SUA_CHAVE_AQUI",
+  resultOnlyMode:true,
+  fifaOfficialUrl:"https://www.fifa.com/pt/tournaments/mens/worldcup/canadamexicousa2026/scores-fixtures?country=BR&wtw-filter=ALL&sortBy=groups",
   liveSyncPolicy:{
     enabled:true,
     maxPlannedSyncsPerMatch:2,
@@ -1221,6 +1222,57 @@ const TEST_MATCHES = [
   }
 ];
 
+
+/*
+  BASE OFICIAL FIFA - ÁREA PARA PREENCHIMENTO CONTROLADO
+
+  Como a página oficial da FIFA é dinâmica e pode bloquear scraping direto no navegador,
+  a forma mais confiável no Spark/GitHub Pages é manter aqui uma base estática revisada.
+
+  Formato esperado de cada jogo:
+  {
+    internalId:"wc2026_match_001",
+    apiId:"", // opcional: id Zafronix correspondente, se conhecido
+    source:"fifa_official_manual",
+    group:"A",
+    phase:"Fase de Grupos",
+    home:"México",
+    away:"A definir",
+    homeCode:"mx",
+    awayCode:"un",
+    date:"2026-06-11T16:00:00-03:00", // horário de Brasília
+    stadium:"Estádio Azteca",
+    city:"Cidade do México",
+    country:"México",
+    homeScore:null,
+    awayScore:null,
+    status:"scheduled",
+    adminOverride:false,
+    validatedByAdmin:false,
+    validationNotice:null,
+    schemaVersion:SCHEMA_VERSION
+  }
+
+  Por segurança, esta primeira versão não tenta raspar a FIFA automaticamente.
+  Ela prepara o botão e o fluxo para importar os jogos colocados nesta lista.
+*/
+const FIFA_OFFICIAL_MATCHES = [
+  // Cole aqui a base revisada da FIFA quando formos montar a lista completa.
+];
+
+const PROTECTED_FIELDS_FROM_API = [
+  "date",
+  "stadium",
+  "city",
+  "country",
+  "home",
+  "away",
+  "homeCode",
+  "awayCode",
+  "group",
+  "phase"
+];
+
 /* ============================================================
    FIREBASE
 ============================================================ */
@@ -1265,6 +1317,7 @@ let currentUser = null;
 let matchesCache = [];
 let usersCache = [];
 let rankingCache = [];
+let currentUserPredictionsCache = {};
 let apiStatus = {
   online:false,
   lastSyncAt:null,
@@ -1419,152 +1472,6 @@ function safeNumberOrNull(value){
   return Number.isFinite(n) ? n : null;
 }
 
-function extractDateParts(rawDate){
-  if(!rawDate) return null;
-
-  const text = String(rawDate).trim();
-  const match = text.match(/(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2}))?/);
-
-  if(!match) return null;
-
-  return {
-    year:Number(match[1]),
-    month:Number(match[2]),
-    day:Number(match[3]),
-    hour:Number(match[4]),
-    minute:Number(match[5]),
-    second:Number(match[6] || 0)
-  };
-}
-
-function getTimeZoneOffsetMs(date, timeZone){
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    year:'numeric',
-    month:'2-digit',
-    day:'2-digit',
-    hour:'2-digit',
-    minute:'2-digit',
-    second:'2-digit',
-    hour12:false
-  });
-
-  const parts = formatter.formatToParts(date).reduce((acc, part)=>{
-    if(part.type !== 'literal') acc[part.type] = part.value;
-    return acc;
-  }, {});
-
-  const asUtc = Date.UTC(
-    Number(parts.year),
-    Number(parts.month) - 1,
-    Number(parts.day),
-    Number(parts.hour),
-    Number(parts.minute),
-    Number(parts.second)
-  );
-
-  return asUtc - date.getTime();
-}
-
-function zonedLocalTimeToUtc(parts, timeZone){
-  let utcGuess = Date.UTC(
-    parts.year,
-    parts.month - 1,
-    parts.day,
-    parts.hour,
-    parts.minute,
-    parts.second || 0
-  );
-
-  let date = new Date(utcGuess);
-  let offset = getTimeZoneOffsetMs(date, timeZone);
-  let utc = utcGuess - offset;
-
-  date = new Date(utc);
-  offset = getTimeZoneOffsetMs(date, timeZone);
-  utc = utcGuess - offset;
-
-  return new Date(utc);
-}
-
-function formatDateInTimeZoneForStorage(date, timeZone){
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    year:'numeric',
-    month:'2-digit',
-    day:'2-digit',
-    hour:'2-digit',
-    minute:'2-digit',
-    second:'2-digit',
-    hour12:false
-  });
-
-  const parts = formatter.formatToParts(date).reduce((acc, part)=>{
-    if(part.type !== 'literal') acc[part.type] = part.value;
-    return acc;
-  }, {});
-
-  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`;
-}
-
-function getWorldCupHostTimeZone(city, country, stadium){
-  const cityText = normalizeString(`${city || ''} ${stadium || ''}`);
-  const countryText = normalizeString(country || '');
-
-  if(countryText.includes('mexico') || cityText.includes('cdmx') || cityText.includes('cidade do mexico') || cityText.includes('mexico city')){
-    return 'America/Mexico_City';
-  }
-
-  if(cityText.includes('monterrey')) return 'America/Monterrey';
-  if(cityText.includes('guadalajara')) return 'America/Mexico_City';
-
-  if(countryText.includes('canada') || countryText.includes('canada')){
-    if(cityText.includes('vancouver')) return 'America/Vancouver';
-    if(cityText.includes('toronto')) return 'America/Toronto';
-  }
-
-  if(countryText.includes('estados unidos') || countryText.includes('united states') || countryText.includes('usa')){
-    if(cityText.includes('los angeles') || cityText.includes('la ') || cityText === 'la' || cityText.includes('inglewood')) return 'America/Los_Angeles';
-    if(cityText.includes('seattle')) return 'America/Los_Angeles';
-    if(cityText.includes('san francisco') || cityText.includes('sf bay') || cityText.includes('santa clara')) return 'America/Los_Angeles';
-    if(cityText.includes('dallas') || cityText.includes('arlington')) return 'America/Chicago';
-    if(cityText.includes('houston')) return 'America/Chicago';
-    if(cityText.includes('kansas')) return 'America/Chicago';
-    if(cityText.includes('atlanta')) return 'America/New_York';
-    if(cityText.includes('miami')) return 'America/New_York';
-    if(cityText.includes('boston') || cityText.includes('foxborough')) return 'America/New_York';
-    if(cityText.includes('philadelphia')) return 'America/New_York';
-    if(cityText.includes('new york') || cityText.includes('ny') || cityText.includes('new jersey') || cityText.includes('east rutherford')) return 'America/New_York';
-  }
-
-  return 'UTC';
-}
-
-function normalizeZafronixDateToBrasilia(rawDate, city, country, stadium){
-  if(!rawDate) return '';
-
-  const text = String(rawDate).trim();
-  const brasiliaTimeZone = 'America/Sao_Paulo';
-
-  // If API sends UTC/offset-aware ISO, preserve the instant and store it as Brasilia local time.
-  if(/[zZ]$|[+-]\d{2}:?\d{2}$/.test(text)){
-    const date = new Date(text);
-    if(!Number.isNaN(date.getTime())){
-      return formatDateInTimeZoneForStorage(date, brasiliaTimeZone);
-    }
-  }
-
-  // Zafronix may send local stadium time. Convert from host city time zone to Brasilia.
-  const parts = extractDateParts(text);
-  if(!parts) return text;
-
-  const sourceTimeZone = getWorldCupHostTimeZone(city, country, stadium);
-  const utcDate = zonedLocalTimeToUtc(parts, sourceTimeZone);
-
-  return formatDateInTimeZoneForStorage(utcDate, brasiliaTimeZone);
-}
-
-
 function downloadTextFile(filename, content, mime="text/plain;charset=utf-8"){
   const blob = new Blob([content], {type:mime});
   const url = URL.createObjectURL(blob);
@@ -1701,15 +1608,15 @@ function assertZafronixConfigured(){
   const key = getZafronixApiKey();
 
   if(!key || key === "COLE_SUA_CHAVE_AQUI"){
-    throw new Error("Configure a chave Zafronix no painel ADMIN, no campo da API.");
+    throw new Error("Cole e salve sua chave Zafronix no painel ADMIN.");
   }
 }
 
 async function fetchZafronix(path){
   assertZafronixConfigured();
 
-  const url = `${API_CONFIG.baseUrl}${path}`;
   const apiKey = getZafronixApiKey();
+  const url = `${API_CONFIG.baseUrl}${path}`;
 
   const attempts = [
     {
@@ -1767,7 +1674,7 @@ async function fetchZafronix(path){
 
   throw new Error(
     `${lastError?.message || "falha desconhecida"}. ` +
-    `Se a mensagem continuar como Failed to fetch, provavelmente é bloqueio de CORS da API no navegador.`
+    `Se continuar como Failed to fetch, provavelmente é bloqueio de CORS da API no navegador.`
   );
 }
 
@@ -1840,7 +1747,7 @@ function normalizeApiMatch(raw){
   const homeData = getTeamData(home);
   const awayData = getTeamData(away);
 
-  const rawDate =
+  const date =
     raw.date ||
     raw.datetime ||
     raw.kickoff ||
@@ -1850,12 +1757,6 @@ function normalizeApiMatch(raw){
     raw.localDateTime ||
     raw.local_datetime ||
     raw.time;
-
-  const stadium = raw.stadium?.name || raw.venue?.name || raw.stadium || raw.venue || raw.location || "";
-  const city = raw.stadium?.city || raw.venue?.city || raw.city || "";
-  const country = raw.stadium?.country || raw.venue?.country || raw.country || "";
-  const localTimezone = getWorldCupHostTimeZone(city, country, stadium);
-  const date = normalizeZafronixDateToBrasilia(rawDate, city, country, stadium);
 
   const statusRaw =
     raw.status ||
@@ -1875,12 +1776,9 @@ function normalizeApiMatch(raw){
     homeCode:homeData.flagCode,
     awayCode:awayData.flagCode,
     date,
-    localDate:rawDate || "",
-    localTimezone,
-    brasiliaTimezone:"America/Sao_Paulo",
-    stadium,
-    city,
-    country,
+    stadium:raw.stadium?.name || raw.venue?.name || raw.stadium || raw.venue || raw.location || "",
+    city:raw.stadium?.city || raw.venue?.city || raw.city || "",
+    country:raw.stadium?.country || raw.venue?.country || raw.country || "",
     status:normalizeApiStatus(statusRaw),
     homeScore:safeNumberOrNull(raw.homeScore ?? raw.home_score ?? raw.score?.home ?? raw.goals?.home ?? raw.score1 ?? raw.goals_home),
     awayScore:safeNumberOrNull(raw.awayScore ?? raw.away_score ?? raw.score?.away ?? raw.goals?.away ?? raw.score2 ?? raw.goals_away),
@@ -2003,6 +1901,16 @@ function isCriticalApiChange(existing, incoming){
 
   if(existing.adminOverride) return true;
 
+  const protectedChanged =
+    (incoming.date && String(existing.date || "") !== String(incoming.date || "")) ||
+    (incoming.home && existing.home !== incoming.home) ||
+    (incoming.away && existing.away !== incoming.away) ||
+    (incoming.group && existing.group && existing.group !== incoming.group) ||
+    (incoming.phase && existing.phase && existing.phase !== incoming.phase) ||
+    (incoming.stadium && existing.stadium && existing.stadium !== incoming.stadium);
+
+  if(protectedChanged) return true;
+
   if(existing.status === "finished"){
     const resultChanged =
       existing.homeScore !== incoming.homeScore ||
@@ -2011,10 +1919,6 @@ function isCriticalApiChange(existing, incoming){
 
     if(resultChanged) return true;
   }
-
-  if(existing.home !== incoming.home || existing.away !== incoming.away) return true;
-  if(existing.group && incoming.group && existing.group !== incoming.group) return true;
-  if(existing.phase && incoming.phase && existing.phase !== incoming.phase) return true;
 
   return false;
 }
@@ -2027,13 +1931,20 @@ function buildSafeApiUpdate(existing, incoming){
     };
   }
 
+  /*
+    Modo confiável:
+    API atualiza apenas resultado/status.
+    Datas, horários, estádios, cidades, grupos, fases e seleções continuam protegidos.
+  */
   const update = {
     apiId:incoming.apiId || existing.apiId || "",
     source:incoming.source,
     lastApiSyncAt:new Date().toISOString(),
     updatedAt:new Date().toISOString(),
     schemaVersion:SCHEMA_VERSION,
-    bracketSlot:incoming.bracketSlot || existing.bracketSlot || null,
+    status:incoming.status || existing.status,
+    homeScore:incoming.homeScore,
+    awayScore:incoming.awayScore,
     advancedTeam:incoming.advancedTeam || existing.advancedTeam || null,
     apiSync:{
       ...(existing.apiSync || {}),
@@ -2041,18 +1952,9 @@ function buildSafeApiUpdate(existing, incoming){
     }
   };
 
-  if(existing.status !== "finished" && !existing.adminOverride){
-    update.date = incoming.date || existing.date;
-    update.stadium = incoming.stadium || existing.stadium || "";
-    update.city = incoming.city || existing.city || "";
-    update.country = incoming.country || existing.country || "";
-    update.status = incoming.status || existing.status;
-    update.homeScore = incoming.homeScore;
-    update.awayScore = incoming.awayScore;
+  if(incoming.bracketSlot && !existing.bracketSlot){
+    update.bracketSlot = incoming.bracketSlot;
   }
-
-  if(!existing.group && incoming.group) update.group = incoming.group;
-  if(!existing.phase && incoming.phase) update.phase = incoming.phase;
 
   return update;
 }
@@ -2337,6 +2239,20 @@ window.importTestMatches = async function(){
   loadGroups();
 }
 
+async function loadCurrentUserPredictionsCache(){
+  currentUserPredictionsCache = {};
+
+  if(!currentUser || currentUser.isAdmin) return;
+
+  const q = query(collection(db, COLLECTIONS.predictions), where("userId", "==", currentUser.id));
+  const snap = await getDocs(q);
+
+  snap.forEach(docSnap=>{
+    const prediction = docSnap.data();
+    currentUserPredictionsCache[prediction.matchId] = prediction;
+  });
+}
+
 async function loadMatchesFromFirestore(){
 
   const q = query(collection(db, COLLECTIONS.matches), orderBy("date", "asc"));
@@ -2369,21 +2285,13 @@ async function loadMatchesFromFirestore(){
     data:matchesCache
   }));
 
+  await loadCurrentUserPredictionsCache();
   await loadMatches();
 }
 
 async function getPrediction(matchId){
-  if(!currentUser) return null;
-
-  const predictionId = `${currentUser.id}_${matchId}`;
-  const predictionRef = doc(db, COLLECTIONS.predictions, predictionId);
-  const predictionSnap = await getDoc(predictionRef);
-
-  if(predictionSnap.exists()){
-    return predictionSnap.data();
-  }
-
-  return null;
+  if(!currentUser || currentUser.isAdmin) return null;
+  return currentUserPredictionsCache[matchId] || null;
 }
 
 window.savePrediction = async function(matchId){
@@ -2467,6 +2375,8 @@ window.savePrediction = async function(matchId){
     }
   );
 
+  currentUserPredictionsCache[matchId] = predictionData;
+
   alert("Palpite salvo com sucesso.");
 
   await loadMatches();
@@ -2536,7 +2446,7 @@ async function loadMatches(){
 
         <div class="matchMeta">
           <strong>${match.phase}</strong> · Grupo ${match.group || "-"}<br>
-          <strong>Data:</strong> ${formatDate(match.date)} <span class="statusPill">Horário de Brasília</span><br>
+          <strong>Data:</strong> ${formatDate(match.date)}<br>
           <strong>Local:</strong> ${match.stadium || "-"} ${match.city ? "· " + match.city : ""}<br>
           <strong>Data / hora limite para registro do palpite:</strong> ${formatLockDate(match.date)}<br>
           <span class="statusPill ${statusClass}">${statusLabel(match.status || "scheduled")}</span>
@@ -3022,6 +2932,69 @@ window.ignoreApiReview = async function(reviewId){
   alert("Pendência ignorada.");
 }
 
+
+
+/* ============================================================
+   IMPORTAÇÃO BASE OFICIAL FIFA
+============================================================ */
+
+window.importFifaOfficialBase = async function(){
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode importar a base FIFA.");
+    return;
+  }
+
+  if(!FIFA_OFFICIAL_MATCHES.length){
+    alert("A base FIFA ainda está vazia no código. Na próxima etapa vamos preencher a lista oficial completa.");
+    return;
+  }
+
+  const confirmText = prompt("Digite IMPORTAR FIFA para importar a base oficial revisada.");
+
+  if(confirmText !== "IMPORTAR FIFA"){
+    alert("Importação cancelada.");
+    return;
+  }
+
+  await createSnapshot("fifa_official_import_before", matchesCache);
+
+  let created = 0;
+  let updated = 0;
+
+  for(const match of FIFA_OFFICIAL_MATCHES){
+    const ref = doc(db, COLLECTIONS.matches, match.internalId);
+    const snap = await getDoc(ref);
+
+    const cleanMatch = {
+      ...match,
+      source:"fifa_official_manual",
+      schemaVersion:SCHEMA_VERSION,
+      updatedAt:new Date().toISOString()
+    };
+
+    await setDoc(ref, cleanMatch, {merge:true});
+
+    if(snap.exists()) updated++;
+    else created++;
+  }
+
+  await logAdminAction("fifa_official_base_imported", {
+    created,
+    updated,
+    total:FIFA_OFFICIAL_MATCHES.length
+  });
+
+  alert(`Base FIFA importada: ${created} criados, ${updated} atualizados.`);
+
+  await loadMatchesFromFirestore();
+  loadChampionOptions();
+  await recalculateRanking(false);
+  await loadRanking();
+  loadGroups();
+  loadPublicScreen();
+  loadBracket();
+  loadSystemStatus();
+}
 
 /* ============================================================
    ZAFRONIX SYNC MANUAL + ATUALIZAÇÕES PLANEJADAS
