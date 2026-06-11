@@ -1,5 +1,3 @@
-_______
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -23,19 +21,13 @@ _______
       --white:#ffffff;
       --soft:#f3f4f6;
     }
-
     body{
       margin:0;
       min-height:100vh;
       font-family:Arial, Helvetica, sans-serif;
-      background:
-        linear-gradient(rgba(0,0,0,.62), rgba(0,0,0,.62)),
-        url("https://s2-ge.glbimg.com/rUwiYSk9pAoPitC1iqWaj-0MW90=/0x0:1081x1081/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_bc8228b6673f488aa253bbcb03c80ec5/internal_photos/bs/2023/r/w/q8AvjjQuqFTdoUo361JA/fwc26-official-emblem-8.jpg");
-      background-size:cover;
-      background-position:center;
-      background-attachment:fixed;
+      background:#0a0a0a; 
       color:var(--black);
-    }
+    } 
 
     .container{
       max-width:1180px;
@@ -509,12 +501,159 @@ _______
       color:#444;
     }
 
-    .bracketPlaceholder{
+    .bracketIntro{
       background:#f9fafb;
       border:2px dashed #111;
       border-radius:18px;
       padding:18px;
       line-height:1.5;
+      margin-bottom:18px;
+    }
+
+    .bracketWrapper{
+      overflow-x:auto;
+      padding-bottom:12px;
+    }
+
+    .bracketBoard{
+      min-width:1180px;
+      display:grid;
+      grid-template-columns:1.15fr 1fr 1fr 1fr 1.15fr;
+      gap:18px;
+      align-items:center;
+    }
+
+    .bracketColumn{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .bracketColumn h3{
+      text-align:center;
+      margin-bottom:4px;
+      background:#050505;
+      color:white;
+      padding:8px;
+      border-radius:14px;
+      font-size:14px;
+    }
+
+    .bracketMatch{
+      background:white;
+      border:2px solid #111;
+      border-radius:16px;
+      padding:10px;
+      min-height:102px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 6px 14px rgba(0,0,0,.12);
+    }
+
+    .bracketMatch::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:7px;
+      background:linear-gradient(90deg,var(--red),var(--orange),var(--purple),var(--blue),var(--cyan),var(--green),var(--yellow));
+    }
+
+    .bracketSlot{
+      font-size:11px;
+      font-weight:bold;
+      color:#555;
+      margin-top:6px;
+      margin-bottom:6px;
+      text-transform:uppercase;
+    }
+
+    .bracketTeam{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      padding:6px 0;
+      border-bottom:1px solid #eee;
+      font-size:13px;
+      font-weight:bold;
+    }
+
+    .bracketTeam:last-child{
+      border-bottom:none;
+    }
+
+    .bracketTeamName{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      min-width:0;
+    }
+
+    .bracketTeamName span{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:130px;
+    }
+
+    .bracketMeta{
+      font-size:11px;
+      color:#666;
+      margin-top:6px;
+      line-height:1.35;
+    }
+
+    .bracketCenter{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      justify-content:center;
+    }
+
+    .finalCard{
+      border:3px solid var(--yellow);
+      background:linear-gradient(135deg,#ffffff,#fffbea);
+      min-height:140px;
+    }
+
+    .thirdPlaceCard{
+      background:#f3f4f6;
+    }
+
+    .bracketLegend{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:12px;
+      margin-top:18px;
+    }
+
+    .legendCard{
+      background:#f9fafb;
+      border:1px solid #ddd;
+      border-radius:14px;
+      padding:12px;
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .placeholderTeam{
+      opacity:.65;
+      font-style:italic;
+    }
+
+    .apiActionBox{
+      background:#f9fafb;
+      border:1px solid #ddd;
+      border-radius:14px;
+      padding:12px;
+      margin-top:10px;
+      margin-bottom:10px;
+    }
+
+    .apiActionBox h4{
+      margin:0 0 8px 0;
     }
 
     .publicScore{
@@ -594,7 +733,15 @@ _______
         <div>
           <h3>Operação</h3>
           <button onclick="importTestMatches()">Importar Jogos de Teste</button>
-          <button onclick="syncApiMatches()" class="adminBtn">Sincronizar API da Copa</button>
+
+          <div class="apiActionBox">
+            <h4>Zafronix API</h4>
+            <button onclick="importZafronixWorldCup()" class="adminBtn">Importar Copa 2026</button>
+            <button onclick="syncZafronixMatches()" class="adminBtn">Atualizar agora pela API</button>
+            <button onclick="syncZafronixPlannedLiveUpdates()" class="adminBtn">Rodar atualizações planejadas</button>
+            <button onclick="syncZafronixStandings()" class="adminBtn">Atualizar classificação</button>
+            <button onclick="syncZafronixBracket()" class="adminBtn">Atualizar chaveamento</button>
+          </div>
           <button onclick="deleteTestMatches()" class="dangerBtn">Limpar jogos de teste</button>
           <button onclick="deleteAllMatches()" class="dangerBtn">Excluir todos os jogos</button>
           <button onclick="recalculateRanking()" class="secondaryBtn">Recalcular Ranking</button>
@@ -690,12 +837,16 @@ _______
 
     <div id="bracketScreen" class="screen card">
       <h2>🧩 Chaveamento</h2>
-      <div class="bracketPlaceholder">
-        <strong>Estrutura das fases finais</strong><br>
-        Esta área será usada para visualizar o caminho das seleções nas fases eliminatórias.
-        Na próxima etapa, vamos definir o layout do chaveamento: 16 avos, oitavas, quartas,
-        semifinais, disputa de 3º lugar e final.
+
+      <div class="bracketIntro">
+        <strong>Estrutura visual das fases eliminatórias</strong><br>
+        Esta primeira versão mostra o bracket em estrutura visual:
+        16 avos, oitavas, quartas, semifinais, disputa de 3º lugar e final.
+        Os jogos eliminatórios serão preenchidos automaticamente quando existirem no Firestore
+        ou ficarão como placeholders até a definição dos classificados.
       </div>
+
+      <div id="bracketBoard">Carregando chaveamento...</div>
     </div>
 
     <div id="rulesScreen" class="screen card rulesBox">
@@ -791,16 +942,39 @@ _______
    O restante do bolão usa o modelo interno padronizado.
 ============================================================ */
 
-const APP_VERSION = "v2.2.0-limpeza-publica-chaveamento";
+const APP_VERSION = "v2.4.0-zafronix-sync-duas-atualizacoes";
 const SCHEMA_VERSION = "1.0";
 
 const API_CONFIG = {
-  provider:"rezarahiminia_worldcup2026_candidate",
+  provider:"zafronix",
   enabled:true,
-  // Endpoint substituível: se a API mudar, altere apenas este valor e normalizeApiMatch().
-  // O endpoint atual é fallback/placeholder e será refinado na próxima etapa da API.
-  matchesEndpoint:"https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",
-  fallbackMode:true
+  baseUrl:"https://api.zafronix.com/fifa/worldcup/v1",
+  year:2026,
+
+  /*
+    COLE SUA NOVA CHAVE AQUI.
+    Exemplo:
+    apiKey:"zwc_free_xxxxxxxxxxxxxxxxxxxxx"
+
+    Atenção: como estamos usando Firebase Spark + GitHub Pages,
+    esta chave ficará visível no código público do site.
+  */
+  apiKey:"COLE_SUA_CHAVE_AQUI",
+
+  /*
+    Regra definida:
+    - ADMIN pode sincronizar tudo manualmente pelo botão.
+    - Durante cada jogo, faremos no máximo 2 atualizações planejadas:
+      1) intervalo
+      2) final do jogo
+    - Tudo que vier da API é salvo no Firestore.
+    - O site calcula pontos apenas com dados salvos no Firestore.
+  */
+  liveSyncPolicy:{
+    enabled:true,
+    maxPlannedSyncsPerMatch:2,
+    plannedSyncMoments:["halftime","fulltime"]
+  }
 };
 
 const ADMIN_EMAIL = "acvs@uol.com.br";
@@ -1293,55 +1467,104 @@ function setAdminMessage(html){
 ============================================================ */
 
 async function fetchExternalMatches(){
+  return fetchZafronixMatches();
+}
+
+function assertZafronixConfigured(){
   if(!API_CONFIG.enabled){
     throw new Error("API desativada nas configurações.");
   }
 
-  const response = await fetch(API_CONFIG.matchesEndpoint, {
+  if(!API_CONFIG.apiKey || API_CONFIG.apiKey === "COLE_SUA_CHAVE_AQUI"){
+    throw new Error("Cole sua chave Zafronix no campo API_CONFIG.apiKey, no início do código.");
+  }
+}
+
+async function fetchZafronix(path){
+  assertZafronixConfigured();
+
+  const response = await fetch(`${API_CONFIG.baseUrl}${path}`, {
     method:"GET",
-    cache:"no-store"
+    cache:"no-store",
+    headers:{
+      "Authorization":`Bearer ${API_CONFIG.apiKey}`,
+      "x-api-key":API_CONFIG.apiKey,
+      "Accept":"application/json"
+    }
   });
 
   if(!response.ok){
-    throw new Error("Falha ao buscar API: " + response.status);
+    throw new Error(`Falha Zafronix ${response.status} em ${path}`);
   }
 
-  const data = await response.json();
+  return await response.json();
+}
 
-  if(Array.isArray(data)){
-    return data;
+function extractZafronixArray(data, preferredKeys=[]){
+  if(Array.isArray(data)) return data;
+
+  for(const key of preferredKeys){
+    if(Array.isArray(data?.[key])) return data[key];
   }
 
-  if(Array.isArray(data.matches)){
-    return data.matches;
-  }
+  if(Array.isArray(data?.data)) return data.data;
+  if(Array.isArray(data?.matches)) return data.matches;
+  if(Array.isArray(data?.results)) return data.results;
+  if(Array.isArray(data?.response)) return data.response;
 
-  if(Array.isArray(data.data)){
-    return data.data;
-  }
+  return [];
+}
 
-  throw new Error("Formato de API não reconhecido.");
+async function fetchZafronixMatches(){
+  const data = await fetchZafronix(`/matches?year=${API_CONFIG.year}&denormalize=true`);
+  return extractZafronixArray(data, ["matches","data","results"]);
+}
+
+async function fetchZafronixMatch(matchId){
+  const data = await fetchZafronix(`/matches/${matchId}`);
+  if(Array.isArray(data)) return data[0] || null;
+  return data?.data || data?.match || data?.result || data || null;
+}
+
+async function fetchZafronixStandings(){
+  return await fetchZafronix(`/standings?year=${API_CONFIG.year}`);
+}
+
+async function fetchZafronixBracket(){
+  return await fetchZafronix(`/bracket?year=${API_CONFIG.year}`);
 }
 
 function normalizeApiMatch(raw){
-  const homeRaw =
+  const rawHome =
+    raw.homeTeam?.name ||
+    raw.home_team?.name ||
+    raw.home?.name ||
+    raw.team1?.name ||
     raw.homeTeam ||
     raw.home_team ||
     raw.home ||
     raw.team1 ||
     raw.localteam ||
-    raw.home_name;
+    raw.home_name ||
+    raw.homePlaceholder ||
+    raw.home_placeholder;
 
-  const awayRaw =
+  const rawAway =
+    raw.awayTeam?.name ||
+    raw.away_team?.name ||
+    raw.away?.name ||
+    raw.team2?.name ||
     raw.awayTeam ||
     raw.away_team ||
     raw.away ||
     raw.team2 ||
     raw.visitorteam ||
-    raw.away_name;
+    raw.away_name ||
+    raw.awayPlaceholder ||
+    raw.away_placeholder;
 
-  const home = findStandardTeamName(homeRaw);
-  const away = findStandardTeamName(awayRaw);
+  const home = findStandardTeamName(rawHome || "A definir");
+  const away = findStandardTeamName(rawAway || "A definir");
 
   const homeData = getTeamData(home);
   const awayData = getTeamData(away);
@@ -1349,28 +1572,45 @@ function normalizeApiMatch(raw){
   const date =
     raw.date ||
     raw.datetime ||
-    raw.matchDate ||
+    raw.kickoff ||
     raw.startTime ||
-    raw.time ||
-    raw.kickoff;
+    raw.start_time ||
+    raw.utcDate ||
+    raw.localDateTime ||
+    raw.local_datetime ||
+    raw.time;
+
+  const statusRaw =
+    raw.status ||
+    raw.matchStatus ||
+    raw.state ||
+    raw.fixture?.status?.short ||
+    raw.fixture?.status?.long;
 
   const normalized = {
     internalId:null,
-    apiId:String(raw.id || raw.apiId || raw.match_id || raw.fixture_id || ""),
+    apiId:String(raw.id || raw.matchId || raw.match_id || raw.fixture_id || raw.apiId || ""),
     source:API_CONFIG.provider,
-    phase:normalizePhaseName(raw.phase || raw.stage || raw.round || raw.matchday || "Fase indefinida"),
-    group:normalizeGroupName(raw.group || raw.groupName || raw.group_name || ""),
+    phase:normalizePhaseName(raw.phase || raw.stage || raw.round || raw.matchday || raw.bracketRound || "Fase indefinida"),
+    group:normalizeGroupName(raw.group || raw.groupName || raw.group_name || raw.pool || ""),
     home,
     away,
     homeCode:homeData.flagCode,
     awayCode:awayData.flagCode,
     date,
-    stadium:raw.stadium || raw.venue || raw.location || "",
-    city:raw.city || "",
-    country:raw.country || "",
-    status:normalizeApiStatus(raw.status || raw.matchStatus || raw.state),
-    homeScore:safeNumberOrNull(raw.homeScore ?? raw.home_score ?? raw.score1 ?? raw.goals_home),
-    awayScore:safeNumberOrNull(raw.awayScore ?? raw.away_score ?? raw.score2 ?? raw.goals_away),
+    stadium:raw.stadium?.name || raw.venue?.name || raw.stadium || raw.venue || raw.location || "",
+    city:raw.stadium?.city || raw.venue?.city || raw.city || "",
+    country:raw.stadium?.country || raw.venue?.country || raw.country || "",
+    status:normalizeApiStatus(statusRaw),
+    homeScore:safeNumberOrNull(raw.homeScore ?? raw.home_score ?? raw.score?.home ?? raw.goals?.home ?? raw.score1 ?? raw.goals_home),
+    awayScore:safeNumberOrNull(raw.awayScore ?? raw.away_score ?? raw.score?.away ?? raw.goals?.away ?? raw.score2 ?? raw.goals_away),
+    bracketSlot:raw.bracketSlot || raw.bracket_slot || raw.slot || raw.matchNumber || raw.match_number || null,
+    advancedTeam:raw.advancedTeam || raw.advanced_team || raw.winner || null,
+    apiSync:{
+      halftimeDone:false,
+      fulltimeDone:false,
+      lastPlannedSyncAt:null
+    },
     adminOverride:false,
     validatedByAdmin:false,
     validationNotice:null,
@@ -1381,6 +1621,7 @@ function normalizeApiMatch(raw){
 
   normalized.internalId =
     raw.internalId ||
+    raw.slug ||
     buildInternalId(normalized);
 
   return normalized;
@@ -1389,11 +1630,18 @@ function normalizeApiMatch(raw){
 function normalizeApiStatus(status){
   const s = normalizeString(status);
 
-  if(["finished","final","fulltime","ft","completed","encerrado"].includes(s)) return "finished";
-  if(["live","inprogress","in_progress","playing","ao vivo"].includes(s)) return "live";
-  if(["scheduled","notstarted","not_started","fixture","agendado"].includes(s)) return "scheduled";
+  if(["finished","final","fulltime","ft","completed","encerrado","ended","after extra time","aet"].includes(s)) return "finished";
+  if(["live","inprogress","in_progress","playing","ao vivo","1h","2h","ht","et","p"].includes(s)) return "live";
+  if(["halftime","half time","intervalo","ht"].includes(s)) return "live";
+  if(["scheduled","notstarted","not_started","fixture","agendado","ns","tbd"].includes(s)) return "scheduled";
+  if(["postponed","cancelled","canceled"].includes(s)) return "scheduled";
 
   return "scheduled";
+}
+
+function isHalftimeStatus(rawOrNormalized){
+  const s = normalizeString(rawOrNormalized?.status || rawOrNormalized?.matchStatus || rawOrNormalized?.state || rawOrNormalized?.fixture?.status?.short || rawOrNormalized?.fixture?.status?.long || "");
+  return ["halftime","half time","intervalo","ht"].includes(s);
 }
 
 function statusLabel(status){
@@ -1415,12 +1663,6 @@ const PHASE_OPTIONS = [
   "Disputa de 3º lugar",
   "Final"
 ];
-
-function phaseSelectOptions(selectedPhase){
-  return PHASE_OPTIONS.map(phase =>
-    `<option value="${phase}" ${phase === selectedPhase ? "selected" : ""}>${phase}</option>`
-  ).join("");
-}
 
 function normalizePhaseName(rawPhase){
   const text = String(rawPhase || "").trim();
@@ -1453,6 +1695,12 @@ function normalizeGroupName(rawGroup){
   if(!text) return "";
 
   return text.replace(/Group\s*/i, "").replace(/Grupo\s*/i, "").trim();
+}
+
+function phaseSelectOptions(selectedPhase){
+  return PHASE_OPTIONS.map(phase =>
+    `<option value="${phase}" ${phase === selectedPhase ? "selected" : ""}>${phase}</option>`
+  ).join("");
 }
 
 function validateNormalizedMatch(match){
@@ -1504,7 +1752,13 @@ function buildSafeApiUpdate(existing, incoming){
     source:incoming.source,
     lastApiSyncAt:new Date().toISOString(),
     updatedAt:new Date().toISOString(),
-    schemaVersion:SCHEMA_VERSION
+    schemaVersion:SCHEMA_VERSION,
+    bracketSlot:incoming.bracketSlot || existing.bracketSlot || null,
+    advancedTeam:incoming.advancedTeam || existing.advancedTeam || null,
+    apiSync:{
+      ...(existing.apiSync || {}),
+      ...(incoming.apiSync || {})
+    }
   };
 
   if(existing.status !== "finished" && !existing.adminOverride){
@@ -1633,6 +1887,7 @@ async function openDashboard(name){
   await loadAchievements();
   loadGroups();
   loadPublicScreen();
+  loadBracket();
   loadSystemStatus();
   if(currentUser && currentUser.isAdmin){
     loadAdminUsersList();
@@ -1733,6 +1988,10 @@ window.showScreen = function(screenId, btn){
   document.querySelectorAll(".tabBtn").forEach(button=>button.classList.remove("active"));
   document.getElementById(screenId).classList.add("active");
   if(btn) btn.classList.add("active");
+
+  if(screenId === "bracketScreen"){
+    loadBracket();
+  }
 }
 
 const savedEmail = localStorage.getItem("bolaoEmail");
@@ -2481,6 +2740,312 @@ window.ignoreApiReview = async function(reviewId){
 
   alert("Pendência ignorada.");
 }
+
+
+/* ============================================================
+   ZAFRONIX SYNC MANUAL + ATUALIZAÇÕES PLANEJADAS
+============================================================ */
+
+async function upsertNormalizedMatchesFromApi(rawMatches, syncType){
+  const normalized = rawMatches.map(normalizeApiMatch);
+  const validMatches = [];
+  const invalidMatches = [];
+
+  normalized.forEach(match=>{
+    const validation = validateNormalizedMatch(match);
+    if(validation.valid) validMatches.push(match);
+    else invalidMatches.push({match, errors:validation.errors});
+  });
+
+  const affectedSnapshot = [];
+  let created = 0;
+  let updated = 0;
+  let queued = 0;
+
+  for(const incoming of validMatches){
+    const ref = doc(db, COLLECTIONS.matches, incoming.internalId);
+    const snap = await getDoc(ref);
+    const existing = snap.exists() ? {internalId:snap.id, ...snap.data()} : null;
+
+    if(existing) affectedSnapshot.push(existing);
+
+    if(!existing){
+      await setDoc(ref, incoming, {merge:true});
+      created++;
+      continue;
+    }
+
+    if(isCriticalApiChange(existing, incoming)){
+      await addDoc(collection(db, COLLECTIONS.apiReviewQueue), {
+        matchId:incoming.internalId,
+        apiId:incoming.apiId,
+        source:incoming.source,
+        status:"pending",
+        conflictType:"critical_change",
+        currentValue:existing,
+        proposedValue:incoming,
+        detectedAt:new Date().toISOString(),
+        schemaVersion:SCHEMA_VERSION
+      });
+      queued++;
+      continue;
+    }
+
+    const safeUpdate = buildSafeApiUpdate(existing, incoming);
+    await setDoc(ref, safeUpdate, {merge:true});
+    updated++;
+  }
+
+  if(affectedSnapshot.length){
+    await createSnapshot(syncType, affectedSnapshot);
+  }
+
+  await setDoc(doc(db, COLLECTIONS.systemStatus, "api"), {
+    online:true,
+    lastSyncAt:new Date().toISOString(),
+    message:`${created} novos jogos, ${updated} atualizados, ${queued} pendências.`,
+    provider:API_CONFIG.provider,
+    syncType,
+    appVersion:APP_VERSION,
+    updatedAt:new Date().toISOString()
+  }, {merge:true});
+
+  await logAdminAction(syncType, {
+    created,
+    updated,
+    queued,
+    invalid:invalidMatches.length
+  });
+
+  return {created, updated, queued, invalid:invalidMatches.length};
+}
+
+window.importZafronixWorldCup = async function(){
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode importar jogos da Zafronix.");
+    return;
+  }
+
+  setAdminMessage("Importando Copa 2026 da Zafronix...");
+
+  try{
+    const rawMatches = await fetchZafronixMatches();
+    const result = await upsertNormalizedMatchesFromApi(rawMatches, "zafronix_import_worldcup");
+
+    setAdminMessage(`<div class="success">Importação concluída: ${result.created} criados, ${result.updated} atualizados, ${result.queued} pendências.</div>`);
+
+    await loadMatchesFromFirestore();
+    await recalculateRanking(false);
+    await loadRanking();
+    loadGroups();
+    loadPublicScreen();
+    loadBracket();
+    loadSystemStatus();
+  }catch(error){
+    setAdminMessage(`<div class="warning">Falha Zafronix: ${error.message}</div>`);
+  }
+}
+
+window.syncZafronixMatches = async function(){
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode atualizar a Zafronix.");
+    return;
+  }
+
+  setAdminMessage("Atualizando jogos/resultados pela Zafronix...");
+
+  try{
+    const rawMatches = await fetchZafronixMatches();
+    const result = await upsertNormalizedMatchesFromApi(rawMatches, "zafronix_manual_matches_sync");
+
+    setAdminMessage(`<div class="success">Atualização concluída: ${result.created} criados, ${result.updated} atualizados, ${result.queued} pendências.</div>`);
+
+    await loadMatchesFromFirestore();
+    await recalculateRanking(false);
+    await loadRanking();
+    await loadAchievements();
+    loadGroups();
+    loadPublicScreen();
+    loadBracket();
+    loadSystemStatus();
+  }catch(error){
+    setAdminMessage(`<div class="warning">Falha Zafronix: ${error.message}</div>`);
+  }
+}
+
+/*
+  Regra combinada:
+  - Não faremos polling a cada minuto.
+  - Cada jogo terá no máximo duas atualizações planejadas:
+    1) intervalo
+    2) final
+  - Esta função pode ser clicada pelo ADMIN para processar apenas jogos elegíveis.
+  - Futuramente, se houver automação, ela chamará esta mesma função.
+*/
+window.syncZafronixPlannedLiveUpdates = async function(){
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode rodar atualizações planejadas.");
+    return;
+  }
+
+  setAdminMessage("Verificando jogos elegíveis para atualização planejada...");
+
+  try{
+    const now = new Date();
+    const candidates = matchesCache.filter(match=>{
+      if(!match.apiId) return false;
+      if(match.adminOverride) return false;
+      if(match.status === "finished" && match.apiSync?.fulltimeDone) return false;
+
+      const kickoff = new Date(match.date);
+      const minutesSinceKickoff = (now - kickoff) / 60000;
+
+      const halftimeEligible =
+        minutesSinceKickoff >= 45 &&
+        minutesSinceKickoff <= 80 &&
+        !match.apiSync?.halftimeDone;
+
+      const fulltimeEligible =
+        minutesSinceKickoff >= 90 &&
+        !match.apiSync?.fulltimeDone;
+
+      return halftimeEligible || fulltimeEligible;
+    });
+
+    if(!candidates.length){
+      setAdminMessage(`<div class="success">Nenhum jogo elegível para atualização de intervalo/final agora.</div>`);
+      return;
+    }
+
+    let updated = 0;
+    let queued = 0;
+
+    for(const match of candidates){
+      const raw = await fetchZafronixMatch(match.apiId);
+      if(!raw) continue;
+
+      const incoming = normalizeApiMatch(raw);
+      incoming.internalId = match.internalId;
+
+      const nowAgain = new Date();
+      const kickoff = new Date(match.date);
+      const minutesSinceKickoff = (nowAgain - kickoff) / 60000;
+
+      const syncFlag =
+        minutesSinceKickoff >= 90
+          ? "fulltimeDone"
+          : "halftimeDone";
+
+      incoming.apiSync = {
+        ...(match.apiSync || {}),
+        [syncFlag]:true,
+        lastPlannedSyncAt:new Date().toISOString()
+      };
+
+      if(isCriticalApiChange(match, incoming)){
+        await addDoc(collection(db, COLLECTIONS.apiReviewQueue), {
+          matchId:match.internalId,
+          apiId:incoming.apiId,
+          source:incoming.source,
+          status:"pending",
+          conflictType:"planned_live_update_critical_change",
+          currentValue:match,
+          proposedValue:incoming,
+          detectedAt:new Date().toISOString(),
+          schemaVersion:SCHEMA_VERSION
+        });
+        queued++;
+        continue;
+      }
+
+      const update = buildSafeApiUpdate(match, incoming);
+      await setDoc(doc(db, COLLECTIONS.matches, match.internalId), update, {merge:true});
+      updated++;
+    }
+
+    await logAdminAction("zafronix_planned_live_updates", {
+      candidates:candidates.length,
+      updated,
+      queued
+    });
+
+    setAdminMessage(`<div class="success">Atualizações planejadas: ${updated} aplicadas, ${queued} pendências.</div>`);
+
+    await loadMatchesFromFirestore();
+    await recalculateRanking(false);
+    await loadRanking();
+    await loadAchievements();
+    loadGroups();
+    loadPublicScreen();
+    loadBracket();
+    loadSystemStatus();
+  }catch(error){
+    setAdminMessage(`<div class="warning">Falha nas atualizações planejadas: ${error.message}</div>`);
+  }
+}
+
+window.syncZafronixStandings = async function(){
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode atualizar classificação.");
+    return;
+  }
+
+  setAdminMessage("Atualizando classificação pela Zafronix...");
+
+  try{
+    const standings = await fetchZafronixStandings();
+
+    await setDoc(doc(db, COLLECTIONS.systemStatus, "zafronixStandings"), {
+      provider:API_CONFIG.provider,
+      year:API_CONFIG.year,
+      standings,
+      updatedAt:new Date().toISOString(),
+      schemaVersion:SCHEMA_VERSION
+    }, {merge:true});
+
+    await logAdminAction("zafronix_standings_sync", {updatedAt:new Date().toISOString()});
+
+    setAdminMessage(`<div class="success">Classificação salva no Firestore. A tela de grupos segue calculando também pela base local de jogos.</div>`);
+
+    loadSystemStatus();
+  }catch(error){
+    setAdminMessage(`<div class="warning">Falha ao atualizar classificação: ${error.message}</div>`);
+  }
+}
+
+window.syncZafronixBracket = async function(){
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode atualizar chaveamento.");
+    return;
+  }
+
+  setAdminMessage("Atualizando chaveamento pela Zafronix...");
+
+  try{
+    const bracket = await fetchZafronixBracket();
+
+    await setDoc(doc(db, COLLECTIONS.systemStatus, "zafronixBracket"), {
+      provider:API_CONFIG.provider,
+      year:API_CONFIG.year,
+      bracket,
+      updatedAt:new Date().toISOString(),
+      schemaVersion:SCHEMA_VERSION
+    }, {merge:true});
+
+    await logAdminAction("zafronix_bracket_sync", {updatedAt:new Date().toISOString()});
+
+    setAdminMessage(`<div class="success">Chaveamento salvo no Firestore. A aba Chaveamento já está preparada para usar bracketSlot nos jogos.</div>`);
+
+    loadBracket();
+    loadSystemStatus();
+  }catch(error){
+    setAdminMessage(`<div class="warning">Falha ao atualizar chaveamento: ${error.message}</div>`);
+  }
+}
+
+/* Mantém compatibilidade com botão antigo, se existir. */
+window.syncApiMatches = window.syncZafronixMatches;
+
 
 /* ============================================================
    CAMPEÃO
@@ -3302,6 +3867,205 @@ async function loadSystemStatus(){
     <strong>API:</strong> ${apiDoc?.online ? "online" : "indisponível/não validada"}<br>
     <strong>Última sync:</strong> ${apiDoc?.lastSyncAt ? formatDate(apiDoc.lastSyncAt) : "-"}<br>
     <strong>Mensagem:</strong> ${apiDoc?.message || apiStatus.message}
+  `;
+}
+
+
+/* ============================================================
+   CHAVEAMENTO
+   Primeira versão: visual + estrutural.
+   Não implementa ainda a matriz FIFA dos melhores terceiros.
+============================================================ */
+
+const BRACKET_SLOTS = {
+  R32:[
+    "R32_01","R32_02","R32_03","R32_04",
+    "R32_05","R32_06","R32_07","R32_08",
+    "R32_09","R32_10","R32_11","R32_12",
+    "R32_13","R32_14","R32_15","R32_16"
+  ],
+  R16:[
+    "R16_01","R16_02","R16_03","R16_04",
+    "R16_05","R16_06","R16_07","R16_08"
+  ],
+  QF:["QF_01","QF_02","QF_03","QF_04"],
+  SF:["SF_01","SF_02"],
+  THIRD:["THIRD_PLACE"],
+  FINAL:["FINAL"]
+};
+
+const BRACKET_PLACEHOLDERS = {
+  R32_01:["1E","3 ABCDF"],
+  R32_02:["1I","3 CDFGH"],
+  R32_03:["2A","2B"],
+  R32_04:["1F","2C"],
+  R32_05:["2K","2L"],
+  R32_06:["1H","2J"],
+  R32_07:["1D","3 BEFJ"],
+  R32_08:["1G","3 AEHIJ"],
+  R32_09:["1C","2F"],
+  R32_10:["2E","2I"],
+  R32_11:["1A","3 CEFHI"],
+  R32_12:["1L","3 EHIJK"],
+  R32_13:["1J","2H"],
+  R32_14:["2D","2G"],
+  R32_15:["1B","3 EFGJ"],
+  R32_16:["1K","3 EHIJ"],
+  R16_01:["Vencedor R32_01","Vencedor R32_02"],
+  R16_02:["Vencedor R32_03","Vencedor R32_04"],
+  R16_03:["Vencedor R32_05","Vencedor R32_06"],
+  R16_04:["Vencedor R32_07","Vencedor R32_08"],
+  R16_05:["Vencedor R32_09","Vencedor R32_10"],
+  R16_06:["Vencedor R32_11","Vencedor R32_12"],
+  R16_07:["Vencedor R32_13","Vencedor R32_14"],
+  R16_08:["Vencedor R32_15","Vencedor R32_16"],
+  QF_01:["Vencedor R16_01","Vencedor R16_02"],
+  QF_02:["Vencedor R16_03","Vencedor R16_04"],
+  QF_03:["Vencedor R16_05","Vencedor R16_06"],
+  QF_04:["Vencedor R16_07","Vencedor R16_08"],
+  SF_01:["Vencedor QF_01","Vencedor QF_02"],
+  SF_02:["Vencedor QF_03","Vencedor QF_04"],
+  THIRD_PLACE:["Perdedor SF_01","Perdedor SF_02"],
+  FINAL:["Vencedor SF_01","Vencedor SF_02"]
+};
+
+function getBracketMatch(slot){
+  return matchesCache.find(match => match.bracketSlot === slot) || null;
+}
+
+function getBracketScore(match, side){
+  if(!match) return "";
+  const score = side === "home" ? match.homeScore : match.awayScore;
+  return score === null || score === undefined ? "" : score;
+}
+
+function renderBracketTeam(teamName, code, score, isPlaceholder=false){
+  const flag = code ? `<img class="flag" src="${flagUrl(code)}" alt="${teamName}">` : "";
+  const placeholderClass = isPlaceholder ? "placeholderTeam" : "";
+
+  return `
+    <div class="bracketTeam">
+      <div class="bracketTeamName ${placeholderClass}">
+        ${flag}
+        <span>${teamName}</span>
+      </div>
+      <strong>${score}</strong>
+    </div>
+  `;
+}
+
+function renderBracketMatch(slot, extraClass=""){
+  const match = getBracketMatch(slot);
+  const placeholders = BRACKET_PLACEHOLDERS[slot] || ["Indefinido","Indefinido"];
+
+  if(match){
+    const notice = match.validatedByAdmin
+      ? `<div class="validatedNotice">Alteração validada pelo administrador</div>`
+      : match.adminOverride
+        ? `<div class="adminNotice">Dado inserido pelo administrador</div>`
+        : "";
+
+    return `
+      <div class="bracketMatch ${extraClass}">
+        <div class="bracketSlot">${slot}</div>
+        ${renderBracketTeam(match.home, match.homeCode, getBracketScore(match, "home"))}
+        ${renderBracketTeam(match.away, match.awayCode, getBracketScore(match, "away"))}
+        <div class="bracketMeta">
+          ${statusLabel(match.status)} · ${formatDate(match.date)}<br>
+          ${match.stadium || ""} ${match.city ? "· " + match.city : ""}
+        </div>
+        ${notice}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="bracketMatch ${extraClass}">
+      <div class="bracketSlot">${slot}</div>
+      ${renderBracketTeam(placeholders[0], "", "", true)}
+      ${renderBracketTeam(placeholders[1], "", "", true)}
+      <div class="bracketMeta">
+        Aguardando definição dos classificados
+      </div>
+    </div>
+  `;
+}
+
+function loadBracket(){
+  const box = document.getElementById("bracketBoard");
+  if(!box) return;
+
+  const leftR32 = BRACKET_SLOTS.R32.slice(0,8).map(slot=>renderBracketMatch(slot)).join("");
+  const rightR32 = BRACKET_SLOTS.R32.slice(8,16).map(slot=>renderBracketMatch(slot)).join("");
+
+  const leftR16 = BRACKET_SLOTS.R16.slice(0,4).map(slot=>renderBracketMatch(slot)).join("");
+  const rightR16 = BRACKET_SLOTS.R16.slice(4,8).map(slot=>renderBracketMatch(slot)).join("");
+
+  const leftQF = BRACKET_SLOTS.QF.slice(0,2).map(slot=>renderBracketMatch(slot)).join("");
+  const rightQF = BRACKET_SLOTS.QF.slice(2,4).map(slot=>renderBracketMatch(slot)).join("");
+
+  const semis = BRACKET_SLOTS.SF.map(slot=>renderBracketMatch(slot)).join("");
+
+  box.innerHTML = `
+    <div class="bracketWrapper">
+      <div class="bracketBoard">
+        <div class="bracketColumn">
+          <h3>16 avos</h3>
+          ${leftR32}
+        </div>
+
+        <div class="bracketColumn">
+          <h3>Oitavas / Quartas</h3>
+          ${leftR16}
+          ${leftQF}
+        </div>
+
+        <div class="bracketCenter">
+          <div class="bracketColumn">
+            <h3>Semifinais</h3>
+            ${semis}
+          </div>
+
+          <div class="bracketColumn">
+            <h3>Final</h3>
+            ${renderBracketMatch("FINAL", "finalCard")}
+            <h3>3º lugar</h3>
+            ${renderBracketMatch("THIRD_PLACE", "thirdPlaceCard")}
+          </div>
+        </div>
+
+        <div class="bracketColumn">
+          <h3>Quartas / Oitavas</h3>
+          ${rightQF}
+          ${rightR16}
+        </div>
+
+        <div class="bracketColumn">
+          <h3>16 avos</h3>
+          ${rightR32}
+        </div>
+      </div>
+    </div>
+
+    <div class="bracketLegend">
+      <div class="legendCard">
+        <strong>Como ler</strong><br>
+        Os blocos indicam os confrontos previstos para cada fase. Quando o jogo existir no Firestore,
+        o card exibirá seleções, bandeiras, data, local e placar.
+      </div>
+
+      <div class="legendCard">
+        <strong>Melhores terceiros</strong><br>
+        Campos como “3 ABCDF” indicam que o terceiro classificado será definido conforme a matriz oficial FIFA.
+        Essa matriz será implementada em etapa posterior.
+      </div>
+
+      <div class="legendCard">
+        <strong>Pênaltis</strong><br>
+        O placar do bolão não inclui pênaltis, mas o chaveamento futuro usará o campo interno
+        <code>advancedTeam</code> para indicar quem avançou.
+      </div>
+    </div>
   `;
 }
 
