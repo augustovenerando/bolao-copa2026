@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Bolão Copa 2026</title>
+  <title>Bolão Copa 2026!!!</title>
 
   <style>
     *{ box-sizing:border-box; }
@@ -954,7 +954,7 @@
    O restante do bolão usa o modelo interno padronizado.
 ============================================================ */
 
-const APP_VERSION = "v2.4.2-zafronix-key-ui-debug";
+const APP_VERSION = "v2.4.3-zafronix-horario-brasilia";
 const SCHEMA_VERSION = "1.0";
 
 const API_CONFIG = {
@@ -1419,6 +1419,152 @@ function safeNumberOrNull(value){
   return Number.isFinite(n) ? n : null;
 }
 
+function extractDateParts(rawDate){
+  if(!rawDate) return null;
+
+  const text = String(rawDate).trim();
+  const match = text.match(/(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2}))?/);
+
+  if(!match) return null;
+
+  return {
+    year:Number(match[1]),
+    month:Number(match[2]),
+    day:Number(match[3]),
+    hour:Number(match[4]),
+    minute:Number(match[5]),
+    second:Number(match[6] || 0)
+  };
+}
+
+function getTimeZoneOffsetMs(date, timeZone){
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year:'numeric',
+    month:'2-digit',
+    day:'2-digit',
+    hour:'2-digit',
+    minute:'2-digit',
+    second:'2-digit',
+    hour12:false
+  });
+
+  const parts = formatter.formatToParts(date).reduce((acc, part)=>{
+    if(part.type !== 'literal') acc[part.type] = part.value;
+    return acc;
+  }, {});
+
+  const asUtc = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+    Number(parts.second)
+  );
+
+  return asUtc - date.getTime();
+}
+
+function zonedLocalTimeToUtc(parts, timeZone){
+  let utcGuess = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second || 0
+  );
+
+  let date = new Date(utcGuess);
+  let offset = getTimeZoneOffsetMs(date, timeZone);
+  let utc = utcGuess - offset;
+
+  date = new Date(utc);
+  offset = getTimeZoneOffsetMs(date, timeZone);
+  utc = utcGuess - offset;
+
+  return new Date(utc);
+}
+
+function formatDateInTimeZoneForStorage(date, timeZone){
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year:'numeric',
+    month:'2-digit',
+    day:'2-digit',
+    hour:'2-digit',
+    minute:'2-digit',
+    second:'2-digit',
+    hour12:false
+  });
+
+  const parts = formatter.formatToParts(date).reduce((acc, part)=>{
+    if(part.type !== 'literal') acc[part.type] = part.value;
+    return acc;
+  }, {});
+
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`;
+}
+
+function getWorldCupHostTimeZone(city, country, stadium){
+  const cityText = normalizeString(`${city || ''} ${stadium || ''}`);
+  const countryText = normalizeString(country || '');
+
+  if(countryText.includes('mexico') || cityText.includes('cdmx') || cityText.includes('cidade do mexico') || cityText.includes('mexico city')){
+    return 'America/Mexico_City';
+  }
+
+  if(cityText.includes('monterrey')) return 'America/Monterrey';
+  if(cityText.includes('guadalajara')) return 'America/Mexico_City';
+
+  if(countryText.includes('canada') || countryText.includes('canada')){
+    if(cityText.includes('vancouver')) return 'America/Vancouver';
+    if(cityText.includes('toronto')) return 'America/Toronto';
+  }
+
+  if(countryText.includes('estados unidos') || countryText.includes('united states') || countryText.includes('usa')){
+    if(cityText.includes('los angeles') || cityText.includes('la ') || cityText === 'la' || cityText.includes('inglewood')) return 'America/Los_Angeles';
+    if(cityText.includes('seattle')) return 'America/Los_Angeles';
+    if(cityText.includes('san francisco') || cityText.includes('sf bay') || cityText.includes('santa clara')) return 'America/Los_Angeles';
+    if(cityText.includes('dallas') || cityText.includes('arlington')) return 'America/Chicago';
+    if(cityText.includes('houston')) return 'America/Chicago';
+    if(cityText.includes('kansas')) return 'America/Chicago';
+    if(cityText.includes('atlanta')) return 'America/New_York';
+    if(cityText.includes('miami')) return 'America/New_York';
+    if(cityText.includes('boston') || cityText.includes('foxborough')) return 'America/New_York';
+    if(cityText.includes('philadelphia')) return 'America/New_York';
+    if(cityText.includes('new york') || cityText.includes('ny') || cityText.includes('new jersey') || cityText.includes('east rutherford')) return 'America/New_York';
+  }
+
+  return 'UTC';
+}
+
+function normalizeZafronixDateToBrasilia(rawDate, city, country, stadium){
+  if(!rawDate) return '';
+
+  const text = String(rawDate).trim();
+  const brasiliaTimeZone = 'America/Sao_Paulo';
+
+  // If API sends UTC/offset-aware ISO, preserve the instant and store it as Brasilia local time.
+  if(/[zZ]$|[+-]\d{2}:?\d{2}$/.test(text)){
+    const date = new Date(text);
+    if(!Number.isNaN(date.getTime())){
+      return formatDateInTimeZoneForStorage(date, brasiliaTimeZone);
+    }
+  }
+
+  // Zafronix may send local stadium time. Convert from host city time zone to Brasilia.
+  const parts = extractDateParts(text);
+  if(!parts) return text;
+
+  const sourceTimeZone = getWorldCupHostTimeZone(city, country, stadium);
+  const utcDate = zonedLocalTimeToUtc(parts, sourceTimeZone);
+
+  return formatDateInTimeZoneForStorage(utcDate, brasiliaTimeZone);
+}
+
+
 function downloadTextFile(filename, content, mime="text/plain;charset=utf-8"){
   const blob = new Blob([content], {type:mime});
   const url = URL.createObjectURL(blob);
@@ -1694,7 +1840,7 @@ function normalizeApiMatch(raw){
   const homeData = getTeamData(home);
   const awayData = getTeamData(away);
 
-  const date =
+  const rawDate =
     raw.date ||
     raw.datetime ||
     raw.kickoff ||
@@ -1704,6 +1850,12 @@ function normalizeApiMatch(raw){
     raw.localDateTime ||
     raw.local_datetime ||
     raw.time;
+
+  const stadium = raw.stadium?.name || raw.venue?.name || raw.stadium || raw.venue || raw.location || "";
+  const city = raw.stadium?.city || raw.venue?.city || raw.city || "";
+  const country = raw.stadium?.country || raw.venue?.country || raw.country || "";
+  const localTimezone = getWorldCupHostTimeZone(city, country, stadium);
+  const date = normalizeZafronixDateToBrasilia(rawDate, city, country, stadium);
 
   const statusRaw =
     raw.status ||
@@ -1723,9 +1875,12 @@ function normalizeApiMatch(raw){
     homeCode:homeData.flagCode,
     awayCode:awayData.flagCode,
     date,
-    stadium:raw.stadium?.name || raw.venue?.name || raw.stadium || raw.venue || raw.location || "",
-    city:raw.stadium?.city || raw.venue?.city || raw.city || "",
-    country:raw.stadium?.country || raw.venue?.country || raw.country || "",
+    localDate:rawDate || "",
+    localTimezone,
+    brasiliaTimezone:"America/Sao_Paulo",
+    stadium,
+    city,
+    country,
     status:normalizeApiStatus(statusRaw),
     homeScore:safeNumberOrNull(raw.homeScore ?? raw.home_score ?? raw.score?.home ?? raw.goals?.home ?? raw.score1 ?? raw.goals_home),
     awayScore:safeNumberOrNull(raw.awayScore ?? raw.away_score ?? raw.score?.away ?? raw.goals?.away ?? raw.score2 ?? raw.goals_away),
@@ -2381,7 +2536,7 @@ async function loadMatches(){
 
         <div class="matchMeta">
           <strong>${match.phase}</strong> · Grupo ${match.group || "-"}<br>
-          <strong>Data:</strong> ${formatDate(match.date)}<br>
+          <strong>Data:</strong> ${formatDate(match.date)} <span class="statusPill">Horário de Brasília</span><br>
           <strong>Local:</strong> ${match.stadium || "-"} ${match.city ? "· " + match.city : ""}<br>
           <strong>Data / hora limite para registro do palpite:</strong> ${formatLockDate(match.date)}<br>
           <span class="statusPill ${statusClass}">${statusLabel(match.status || "scheduled")}</span>
