@@ -807,18 +807,20 @@
           <button onclick="importFifaOfficialBase()" class="adminBtn">Importar base oficial FIFA</button>
 
           <div class="apiActionBox">
-            <h4>Zafronix API</h4>
-            <p class="smallText">Cole a chave no campo abaixo e salve. Ela ficará no navegador deste dispositivo.</p>
-            <input type="password" id="zafronixApiKeyInput" placeholder="Cole sua chave Zafronix aqui" />
-            <button onclick="saveZafronixApiKey()" class="secondaryBtn">Salvar chave da API</button>
-            <button onclick="testZafronixConnection()" class="secondaryBtn">Testar conexão</button>
-            <div id="zafronixKeyStatus" class="smallText"></div>
+            <h4>Base FIFA</h4>
+            <button onclick="importFifaOfficialBase()" class="adminBtn">Importar / atualizar base FIFA</button>
+            <button onclick="runFifaScheduledUpdates()" class="adminBtn">Verificar atualizações programadas FIFA</button>
+            <button onclick="deleteAllMatches()" class="dangerBtn">Apagar todos os jogos</button>
+            <p class="smallText">
+              Única base oficial: página de jogos da FIFA. Os dados são salvos no Firebase e usados localmente pelo bolão.
+            </p>
+          </div>
             <br>
             
-            <button onclick="syncZafronixMatches()" class="adminBtn">Atualizar apenas resultados</button>
-            <button onclick="syncZafronixPlannedLiveUpdates()" class="adminBtn">Rodar atualizações planejadas</button>
-            <button onclick="syncZafronixStandings()" class="adminBtn">Atualizar classificação FIFA</button>
-            <button onclick="syncZafronixBracket()" class="adminBtn">Atualizar chaveamento FIFA</button>
+            
+            
+            
+            
           </div>
           
           
@@ -1003,14 +1005,13 @@
       <h3>Atualização dos dados</h3>
       <p>
         A base oficial de jogos, datas, horários, grupos e estádios vem da tabela da FIFA e fica salva no banco do bolão.
-        Durante jogos ao vivo, a API auxiliar pode atualizar apenas status e placar, com no máximo duas atualizações por jogo:
-        uma no intervalo e outra no final. Os resultados ficam salvos localmente no Firebase.
+        A página oficial da FIFA é a única referência para jogos, horários, grupos, locais e resultados. A base é importada e salva no Firebase. Durante os jogos, o ADMIN pode verificar atualizações programadas nos horários definidos e atualizar a base com os dados da FIFA.
       </p>
 
       <h3>Administração e auditoria</h3>
       <p>
         Alterações manuais aparecem como <strong>“Dado inserido pelo administrador”</strong>.
-        Alterações vindas da API e validadas aparecem como <strong>“Alteração validada pelo administrador”</strong>.
+        Alterações importadas/revisadas a partir da FIFA podem ser registradas pelo ADMIN para auditoria.
         O sistema possui logs, snapshots e backup para auditoria.
       </p>
 
@@ -1066,43 +1067,13 @@
    O restante do bolão usa o modelo interno padronizado.
 ============================================================ */
 
-const APP_VERSION = "v2.8.0-lancamento-beta";
+const APP_VERSION = "v2.9.0-fifa-only-sem-api";
 const SCHEMA_VERSION = "1.0";
 
-const API_CONFIG = {
-  /*
-    ESTRATÉGIA OFICIAL DO BOLÃO
-
-    1) FIFA oficial = fonte para calendário/base:
-       - seleções
-       - grupos
-       - data/hora em Brasília
-       - estádio/cidade
-       - fase/chaveamento base
-
-    2) Zafronix = fonte auxiliar apenas para resultados:
-       - status
-       - gols
-       - resultado final
-       - advancedTeam, se disponível
-
-    3) Firestore = fonte da verdade:
-       - o site calcula ranking apenas com dados salvos no Firestore
-       - a API nunca sobrescreve data/hora/local/seleções/grupos automaticamente
-       - jogo encerrado alterado pela API vai para fila do ADMIN
-  */
-  provider:"zafronix",
-  enabled:true,
-  baseUrl:"https://api.zafronix.com/fifa/worldcup/v1",
-  year:2026,
-  apiKey:"COLE_SUA_CHAVE_AQUI",
-  resultOnlyMode:true,
-  fifaOfficialUrl:"https://www.fifa.com/pt/tournaments/mens/worldcup/canadamexicousa2026/scores-fixtures?country=BR&wtw-filter=ALL&sortBy=groups",
-  liveSyncPolicy:{
-    enabled:true,
-    maxPlannedSyncsPerMatch:2,
-    plannedSyncMoments:["halftime","fulltime"]
-  }
+const FIFA_CONFIG = {
+  officialUrl:"https://www.fifa.com/pt/tournaments/mens/worldcup/canadamexicousa2026/scores-fixtures?country=BR&wtw-filter=ALL",
+  dailyFullSyncHourBrasilia:7,
+  matchUpdateOffsetsMinutes:[50,100,103,106,109,112,115,118,121,125]
 };
 
 const ADMIN_EMAIL = "acvs@uol.com.br";
@@ -4247,38 +4218,7 @@ function maskApiKey(key){
   return `${key.slice(0, 6)}...${key.slice(-4)}`;
 }
 
-function getZafronixApiKey(){
-  const localKey = localStorage.getItem("zafronixApiKey") || "";
-  return localKey.trim() || (API_CONFIG.apiKey || "").trim();
-}
 
-function updateZafronixKeyStatus(){
-  const box = document.getElementById("zafronixKeyStatus");
-  const input = document.getElementById("zafronixApiKeyInput");
-  const key = getZafronixApiKey();
-
-  if(input && key){
-    input.value = key;
-  }
-
-  if(box){
-    box.innerHTML = `<strong>Chave atual:</strong> ${maskApiKey(key)}`;
-  }
-}
-
-window.saveZafronixApiKey = function(){
-  const input = document.getElementById("zafronixApiKeyInput");
-  const key = (input?.value || "").trim();
-
-  if(!key){
-    alert("Cole a chave Zafronix antes de salvar.");
-    return;
-  }
-
-  localStorage.setItem("zafronixApiKey", key);
-  updateZafronixKeyStatus();
-  alert("Chave Zafronix salva neste navegador.");
-}
 
 window.testZafronixConnection = async function(){
   if(!currentUser || !currentUser.isAdmin){
@@ -4311,87 +4251,8 @@ window.getDebugApiConfig = function(){
    API ADAPTER MODULAR
 ============================================================ */
 
-async function fetchExternalMatches(){
-  return fetchZafronixMatches();
-}
 
-function assertZafronixConfigured(){
-  if(!API_CONFIG.enabled){
-    throw new Error("API desativada nas configurações.");
-  }
 
-  const key = getZafronixApiKey();
-
-  if(!key || key === "COLE_SUA_CHAVE_AQUI"){
-    throw new Error("Cole e salve sua chave Zafronix no painel ADMIN.");
-  }
-}
-
-async function fetchZafronix(path){
-  assertZafronixConfigured();
-
-  const apiKey = getZafronixApiKey();
-  const url = `${API_CONFIG.baseUrl}${path}`;
-
-  const attempts = [
-    {
-      name:"x-api-key",
-      options:{
-        method:"GET",
-        cache:"no-store",
-        headers:{
-          "x-api-key":apiKey,
-          "Accept":"application/json"
-        }
-      }
-    },
-    {
-      name:"Authorization Bearer",
-      options:{
-        method:"GET",
-        cache:"no-store",
-        headers:{
-          "Authorization":`Bearer ${apiKey}`,
-          "Accept":"application/json"
-        }
-      }
-    },
-    {
-      name:"api_key query string",
-      url:`${url}${url.includes("?") ? "&" : "?"}api_key=${encodeURIComponent(apiKey)}`,
-      options:{
-        method:"GET",
-        cache:"no-store",
-        headers:{
-          "Accept":"application/json"
-        }
-      }
-    }
-  ];
-
-  let lastError = null;
-
-  for(const attempt of attempts){
-    try{
-      const response = await fetch(attempt.url || url, attempt.options);
-
-      if(!response.ok){
-        lastError = new Error(`Tentativa ${attempt.name}: HTTP ${response.status}`);
-        continue;
-      }
-
-      return await response.json();
-
-    }catch(error){
-      lastError = new Error(`Tentativa ${attempt.name}: ${error.message}`);
-    }
-  }
-
-  throw new Error(
-    `${lastError?.message || "falha desconhecida"}. ` +
-    `Se continuar como Failed to fetch, provavelmente é bloqueio de CORS da API no navegador.`
-  );
-}
 
 function extractZafronixArray(data, preferredKeys=[]){
   if(Array.isArray(data)) return data;
@@ -4408,24 +4269,9 @@ function extractZafronixArray(data, preferredKeys=[]){
   return [];
 }
 
-async function fetchZafronixMatches(){
-  const data = await fetchZafronix(`/matches?year=${API_CONFIG.year}&denormalize=true`);
-  return extractZafronixArray(data, ["matches","data","results"]);
-}
 
-async function fetchZafronixMatch(matchId){
-  const data = await fetchZafronix(`/matches/${matchId}`);
-  if(Array.isArray(data)) return data[0] || null;
-  return data?.data || data?.match || data?.result || data || null;
-}
 
-async function fetchZafronixStandings(){
-  return await fetchZafronix(`/standings?year=${API_CONFIG.year}`);
-}
 
-async function fetchZafronixBracket(){
-  return await fetchZafronix(`/bracket?year=${API_CONFIG.year}`);
-}
 
 function normalizeApiMatch(raw){
   const rawHome =
@@ -4790,6 +4636,7 @@ async function openDashboard(name){
   loadSystemStatus();
   if(currentUser && currentUser.isAdmin){
     loadAdminUsersList();
+    checkDailyFifaUpdateReminder();
   }
 }
 
@@ -5776,311 +5623,6 @@ window.importFifaOfficialBase = async function(){
   loadBracket();
   loadSystemStatus();
 }
-
-/* ============================================================
-   ZAFRONIX SYNC MANUAL + ATUALIZAÇÕES PLANEJADAS
-============================================================ */
-
-async function upsertNormalizedMatchesFromApi(rawMatches, syncType){
-  const normalized = rawMatches.map(normalizeApiMatch);
-  const validMatches = [];
-  const invalidMatches = [];
-
-  normalized.forEach(match=>{
-    const validation = validateNormalizedMatch(match);
-    if(validation.valid) validMatches.push(match);
-    else invalidMatches.push({match, errors:validation.errors});
-  });
-
-  const affectedSnapshot = [];
-  let created = 0;
-  let updated = 0;
-  let queued = 0;
-
-  for(const incoming of validMatches){
-    const ref = doc(db, COLLECTIONS.matches, incoming.internalId);
-    const snap = await getDoc(ref);
-    const existing = snap.exists() ? {internalId:snap.id, ...snap.data()} : null;
-
-    if(existing) affectedSnapshot.push(existing);
-
-    if(!existing){
-      await setDoc(ref, incoming, {merge:true});
-      created++;
-      continue;
-    }
-
-    if(isCriticalApiChange(existing, incoming)){
-      await addDoc(collection(db, COLLECTIONS.apiReviewQueue), {
-        matchId:incoming.internalId,
-        apiId:incoming.apiId,
-        source:incoming.source,
-        status:"pending",
-        conflictType:"critical_change",
-        currentValue:existing,
-        proposedValue:incoming,
-        detectedAt:new Date().toISOString(),
-        schemaVersion:SCHEMA_VERSION
-      });
-      queued++;
-      continue;
-    }
-
-    const safeUpdate = buildSafeApiUpdate(existing, incoming);
-    await setDoc(ref, safeUpdate, {merge:true});
-    updated++;
-  }
-
-  if(affectedSnapshot.length){
-    await createSnapshot(syncType, affectedSnapshot);
-  }
-
-  await setDoc(doc(db, COLLECTIONS.systemStatus, "api"), {
-    online:true,
-    lastSyncAt:new Date().toISOString(),
-    message:`${created} novos jogos, ${updated} atualizados, ${queued} pendências.`,
-    provider:API_CONFIG.provider,
-    syncType,
-    appVersion:APP_VERSION,
-    updatedAt:new Date().toISOString()
-  }, {merge:true});
-
-  await logAdminAction(syncType, {
-    created,
-    updated,
-    queued,
-    invalid:invalidMatches.length
-  });
-
-  return {created, updated, queued, invalid:invalidMatches.length};
-}
-
-window.importZafronixWorldCup = async function(){
-  if(!currentUser || !currentUser.isAdmin){
-    alert("Apenas o ADMIN pode importar jogos da Zafronix.");
-    return;
-  }
-
-  setAdminMessage("Importando Copa 2026 da Zafronix...");
-
-  try{
-    const rawMatches = await fetchZafronixMatches();
-    const result = await upsertNormalizedMatchesFromApi(rawMatches, "zafronix_import_worldcup");
-
-    setAdminMessage(`<div class="success">Importação concluída: ${result.created} criados, ${result.updated} atualizados, ${result.queued} pendências.</div>`);
-
-    await loadMatchesFromFirestore();
-    await recalculateRanking(false);
-    await loadRanking();
-    loadGroups();
-    loadPublicScreen();
-    loadBracket();
-    loadSystemStatus();
-  }catch(error){
-    setAdminMessage(`<div class="warning">Falha Zafronix: ${error.message}</div>`);
-  }
-}
-
-window.syncZafronixMatches = async function(){
-  if(!currentUser || !currentUser.isAdmin){
-    alert("Apenas o ADMIN pode atualizar a Zafronix.");
-    return;
-  }
-
-  setAdminMessage("Atualizando jogos/resultados pela Zafronix...");
-
-  try{
-    const rawMatches = await fetchZafronixMatches();
-    const result = await upsertNormalizedMatchesFromApi(rawMatches, "zafronix_manual_matches_sync");
-
-    setAdminMessage(`<div class="success">Atualização concluída: ${result.created} criados, ${result.updated} atualizados, ${result.queued} pendências.</div>`);
-
-    await loadMatchesFromFirestore();
-    await recalculateRanking(false);
-    await loadRanking();
-    await loadAchievements();
-    loadGroups();
-    loadPublicScreen();
-    loadBracket();
-    loadSystemStatus();
-  }catch(error){
-    setAdminMessage(`<div class="warning">Falha Zafronix: ${error.message}</div>`);
-  }
-}
-
-/*
-  Regra combinada:
-  - Não faremos polling a cada minuto.
-  - Cada jogo terá no máximo duas atualizações planejadas:
-    1) intervalo
-    2) final
-  - Esta função pode ser clicada pelo ADMIN para processar apenas jogos elegíveis.
-  - Futuramente, se houver automação, ela chamará esta mesma função.
-*/
-window.syncZafronixPlannedLiveUpdates = async function(){
-  if(!currentUser || !currentUser.isAdmin){
-    alert("Apenas o ADMIN pode rodar atualizações planejadas.");
-    return;
-  }
-
-  setAdminMessage("Verificando jogos elegíveis para atualização planejada...");
-
-  try{
-    const now = new Date();
-    const candidates = matchesCache.filter(match=>{
-      if(!match.apiId) return false;
-      if(match.adminOverride) return false;
-      if(match.status === "finished" && match.apiSync?.fulltimeDone) return false;
-
-      const kickoff = new Date(match.date);
-      const minutesSinceKickoff = (now - kickoff) / 60000;
-
-      const halftimeEligible =
-        minutesSinceKickoff >= 45 &&
-        minutesSinceKickoff <= 80 &&
-        !match.apiSync?.halftimeDone;
-
-      const fulltimeEligible =
-        minutesSinceKickoff >= 90 &&
-        !match.apiSync?.fulltimeDone;
-
-      return halftimeEligible || fulltimeEligible;
-    });
-
-    if(!candidates.length){
-      setAdminMessage(`<div class="success">Nenhum jogo elegível para atualização de intervalo/final agora.</div>`);
-      return;
-    }
-
-    let updated = 0;
-    let queued = 0;
-
-    for(const match of candidates){
-      const raw = await fetchZafronixMatch(match.apiId);
-      if(!raw) continue;
-
-      const incoming = normalizeApiMatch(raw);
-      incoming.internalId = match.internalId;
-
-      const nowAgain = new Date();
-      const kickoff = new Date(match.date);
-      const minutesSinceKickoff = (nowAgain - kickoff) / 60000;
-
-      const syncFlag =
-        minutesSinceKickoff >= 90
-          ? "fulltimeDone"
-          : "halftimeDone";
-
-      incoming.apiSync = {
-        ...(match.apiSync || {}),
-        [syncFlag]:true,
-        lastPlannedSyncAt:new Date().toISOString()
-      };
-
-      if(isCriticalApiChange(match, incoming)){
-        await addDoc(collection(db, COLLECTIONS.apiReviewQueue), {
-          matchId:match.internalId,
-          apiId:incoming.apiId,
-          source:incoming.source,
-          status:"pending",
-          conflictType:"planned_live_update_critical_change",
-          currentValue:match,
-          proposedValue:incoming,
-          detectedAt:new Date().toISOString(),
-          schemaVersion:SCHEMA_VERSION
-        });
-        queued++;
-        continue;
-      }
-
-      const update = buildSafeApiUpdate(match, incoming);
-      await setDoc(doc(db, COLLECTIONS.matches, match.internalId), update, {merge:true});
-      updated++;
-    }
-
-    await logAdminAction("zafronix_planned_live_updates", {
-      candidates:candidates.length,
-      updated,
-      queued
-    });
-
-    setAdminMessage(`<div class="success">Atualizações planejadas: ${updated} aplicadas, ${queued} pendências.</div>`);
-
-    await loadMatchesFromFirestore();
-    await recalculateRanking(false);
-    await loadRanking();
-    await loadAchievements();
-    loadGroups();
-    loadPublicScreen();
-    loadBracket();
-    loadSystemStatus();
-  }catch(error){
-    setAdminMessage(`<div class="warning">Falha nas atualizações planejadas: ${error.message}</div>`);
-  }
-}
-
-window.syncZafronixStandings = async function(){
-  if(!currentUser || !currentUser.isAdmin){
-    alert("Apenas o ADMIN pode atualizar classificação.");
-    return;
-  }
-
-  setAdminMessage("Atualizando classificação pela Zafronix...");
-
-  try{
-    const standings = await fetchZafronixStandings();
-
-    await setDoc(doc(db, COLLECTIONS.systemStatus, "zafronixStandings"), {
-      provider:API_CONFIG.provider,
-      year:API_CONFIG.year,
-      standings,
-      updatedAt:new Date().toISOString(),
-      schemaVersion:SCHEMA_VERSION
-    }, {merge:true});
-
-    await logAdminAction("zafronix_standings_sync", {updatedAt:new Date().toISOString()});
-
-    setAdminMessage(`<div class="success">Classificação salva no Firestore. A tela de grupos segue calculando também pela base local de jogos.</div>`);
-
-    loadSystemStatus();
-  }catch(error){
-    setAdminMessage(`<div class="warning">Falha ao atualizar classificação: ${error.message}</div>`);
-  }
-}
-
-window.syncZafronixBracket = async function(){
-  if(!currentUser || !currentUser.isAdmin){
-    alert("Apenas o ADMIN pode atualizar chaveamento.");
-    return;
-  }
-
-  setAdminMessage("Atualizando chaveamento pela Zafronix...");
-
-  try{
-    const bracket = await fetchZafronixBracket();
-
-    await setDoc(doc(db, COLLECTIONS.systemStatus, "zafronixBracket"), {
-      provider:API_CONFIG.provider,
-      year:API_CONFIG.year,
-      bracket,
-      updatedAt:new Date().toISOString(),
-      schemaVersion:SCHEMA_VERSION
-    }, {merge:true});
-
-    await logAdminAction("zafronix_bracket_sync", {updatedAt:new Date().toISOString()});
-
-    setAdminMessage(`<div class="success">Chaveamento salvo no Firestore. A aba Chaveamento já está preparada para usar bracketSlot nos jogos.</div>`);
-
-    loadBracket();
-    loadSystemStatus();
-  }catch(error){
-    setAdminMessage(`<div class="warning">Falha ao atualizar chaveamento: ${error.message}</div>`);
-  }
-}
-
-/* Mantém compatibilidade com botão antigo, se existir. */
-window.syncApiMatches = window.syncZafronixMatches;
-
 
 /* ============================================================
    CAMPEÃO
@@ -7184,6 +6726,134 @@ function setupMatchesFilters(){
   });
 }
 window.setupMatchesFilters = setupMatchesFilters;
+
+
+/* ============================================================
+   ROTINA FIFA-ONLY
+============================================================ */
+
+function getBrasiliaNow(){
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone:"America/Sao_Paulo",
+    year:"numeric",
+    month:"2-digit",
+    day:"2-digit",
+    hour:"2-digit",
+    minute:"2-digit",
+    second:"2-digit",
+    hour12:false
+  }).formatToParts(now).reduce((acc, part)=>{
+    acc[part.type] = part.value;
+    return acc;
+  }, {});
+
+  return new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}-03:00`);
+}
+
+function getMinutesSinceMatchStartBrasilia(match){
+  if(!match.date) return null;
+  const now = getBrasiliaNow();
+  const start = new Date(match.date);
+  return Math.floor((now - start) / 60000);
+}
+
+function getPendingFifaScheduledMatches(){
+  const pending = [];
+
+  matchesCache.forEach(match=>{
+    if(!match.date) return;
+    if(isUndefinedMatch(match)) return;
+
+    const minutes = getMinutesSinceMatchStartBrasilia(match);
+    if(minutes === null || minutes < 0) return;
+
+    const updateFlags = match.fifaUpdateFlags || {};
+
+    FIFA_CONFIG.matchUpdateOffsetsMinutes.forEach(offset=>{
+      const flag = `m${offset}`;
+
+      if(minutes >= offset && !updateFlags[flag]){
+        pending.push({match, offset, flag});
+      }
+    });
+  });
+
+  return pending;
+}
+
+window.runFifaScheduledUpdates = async function(){
+  if(!currentUser || !currentUser.isAdmin){
+    alert("Apenas o ADMIN pode verificar atualizações programadas.");
+    return;
+  }
+
+  const pending = getPendingFifaScheduledMatches();
+
+  if(!pending.length){
+    alert("Nenhum jogo pendente para atualização programada neste momento.");
+    return;
+  }
+
+  const confirmText = confirm(
+    `${pending.length} verificação(ões) programada(s) encontradas. ` +
+    `A base oficial deve ser revisada/importada a partir da página FIFA. Deseja registrar a verificação agora?`
+  );
+
+  if(!confirmText) return;
+
+  for(const item of pending){
+    const match = item.match;
+    const flags = {
+      ...(match.fifaUpdateFlags || {}),
+      [item.flag]:{
+        checkedAt:new Date().toISOString(),
+        offsetMinutes:item.offset,
+        source:"fifa_official_page",
+        status:"pending_manual_fifa_review"
+      }
+    };
+
+    await setDoc(doc(db, COLLECTIONS.matches, match.internalId), {
+      fifaUpdateFlags:flags,
+      updatedAt:new Date().toISOString()
+    }, {merge:true});
+  }
+
+  await logAdminAction("fifa_scheduled_updates_checked", {
+    count:pending.length,
+    offsets:pending.map(item=>item.offset),
+    officialUrl:FIFA_CONFIG.officialUrl,
+    checkedAt:new Date().toISOString()
+  });
+
+  alert("Verificações programadas registradas. Após revisar a página oficial, use Importar / atualizar base FIFA.");
+
+  await loadMatchesFromFirestore();
+  loadSystemStatus();
+}
+
+window.checkDailyFifaUpdateReminder = async function(){
+  if(!currentUser || !currentUser.isAdmin) return;
+
+  const now = getBrasiliaNow();
+  const todayKey = now.toISOString().slice(0,10);
+  const statusRef = doc(db, COLLECTIONS.systemStatus, "fifaDailyUpdate");
+  const statusSnap = await getDoc(statusRef);
+  const status = statusSnap.exists() ? statusSnap.data() : {};
+
+  if(now.getHours() >= FIFA_CONFIG.dailyFullSyncHourBrasilia && status.lastReminderDate !== todayKey){
+    await setDoc(statusRef, {
+      lastReminderDate:todayKey,
+      remindedAt:new Date().toISOString(),
+      officialUrl:FIFA_CONFIG.officialUrl,
+      message:"Atualização diária FIFA recomendada"
+    }, {merge:true});
+
+    alert("Rotina diária: recomenda-se importar/atualizar a base FIFA hoje.");
+  }
+}
+
 
 /* ============================================================
    FIM
